@@ -10,12 +10,12 @@ pub mod file;
 pub mod types;
 pub mod zone;
 
-pub(crate) use base::{Base, Bases};
+pub(crate) use base::{Base, BaseChildren, Bases};
 pub(crate) use cgio::Cgio;
 pub use errors::*;
 pub(crate) use file::File;
 pub(crate) use types::*;
-pub(crate) use zone::{Zone, Zones};
+pub(crate) use zone::{Zone, ZoneChildren, Zones};
 
 use std::ffi::CString;
 use std::marker::PhantomData;
@@ -140,22 +140,36 @@ impl std::fmt::Debug for Library {
     }
 }
 
-pub trait Node<'p> {
+pub trait Node<'p>
+where
+    Self: Sized,
+    Self::Parent: Node<'p> + 'p,
+{
     type Item;
     type Parent;
-    fn goto(&self, lib: &Library) -> CgnsResult<()>
-    where
-        Self: Sized,
-    {
-        lib.goto(&self.path())
-    }
+    type Children;
+    const KIND: <Self::Parent as Node<'p>>::Children;
 
     fn path(&self) -> CgnsPath;
     fn read(&self) -> CgnsResult<Self::Item>;
     fn write(parent: &mut Self::Parent, data: &Self::Item) -> CgnsResult<i32>;
-    fn new(parent: &'p Self::Parent, index: i32) -> Self
-    where
-        Self: Sized;
+    fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
+    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32>;
+    fn parent(&self) -> &Self::Parent;
+    #[inline]
+    fn lib(&self) -> &'p Library {
+        self.parent().lib()
+    }
+    fn goto(&self) -> CgnsResult<()> {
+        self.lib().goto(&self.path())
+    }
+    fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self> {
+        if index > 0 && index <= parent.n_children(Self::KIND)? {
+            Ok(Self::new_unchecked(parent, index))
+        } else {
+            Err(CgnsError::out_of_bounds())
+        }
+    }
 
     // TODO: delete (goto -> parent + delete)
 }
@@ -220,7 +234,7 @@ mod tests {
         let file = lib
             .open("../../TRACE.cgns", CgnsOpenMode::Read)
             .expect("failed to open file");
-        let base = file.get_base(1);
+        let base = file.get_base(1).expect("Failed to get base");
 
         let path = base.path();
         lib.goto(&path).expect("failed to goto path");
@@ -263,7 +277,7 @@ mod tests {
 
         let base_index = Base::write(&mut file, &base_data).expect("failed to write base");
 
-        let base = file.get_base(base_index);
+        let base = file.get_base(base_index).expect("failed to get base");
 
         let data = base.read().expect("failed to read base");
 

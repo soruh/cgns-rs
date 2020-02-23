@@ -14,7 +14,7 @@ impl<'b> Iterator for Bases<'b> {
     type Item = Base<'b>;
     fn next(&mut self) -> Option<Self::Item> {
         if self.current <= self.max {
-            let base = Base::new(self.file, self.current);
+            let base = Base::new_unchecked(self.file, self.current);
 
             self.current += 1;
 
@@ -28,6 +28,10 @@ impl<'b> Iterator for Bases<'b> {
 pub struct Base<'b> {
     pub(crate) base_index: i32,
     pub(crate) file: &'b File<'b>,
+}
+
+pub enum BaseChildren {
+    Zone,
 }
 
 impl<'b> Base<'b> {
@@ -53,7 +57,7 @@ impl<'b> Base<'b> {
     }
 
     #[inline]
-    pub fn get_zone<'z>(&'z self, zone_index: i32) -> Zone<'z> {
+    pub fn get_zone<'z>(&'z self, zone_index: i32) -> CgnsResult<Zone<'z>> {
         Zone::new(self, zone_index)
     }
 
@@ -65,6 +69,8 @@ impl<'b> Base<'b> {
 impl<'b> Node<'b> for Base<'b> {
     type Item = BaseData;
     type Parent = File<'b>;
+    type Children = BaseChildren;
+    const KIND: () = ();
     fn path(&self) -> CgnsPath {
         CgnsPath {
             file_number: self.file.file_number,
@@ -119,11 +125,21 @@ impl<'b> Node<'b> for Base<'b> {
         Ok(base_index)
     }
 
-    fn new(parent: &'b Self::Parent, base_index: i32) -> Base<'b> {
+    fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b> {
         Base {
             file: parent,
             base_index,
         }
+    }
+
+    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
+        match child_kind {
+            Self::Children::Zone => self.n_zones(),
+        }
+    }
+    #[inline]
+    fn parent(&self) -> &Self::Parent {
+        self.file
     }
 }
 

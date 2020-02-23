@@ -91,7 +91,7 @@ impl<'f> File<'f> {
     /// NOTE: the `base_index` is not checked for validity
     // TODO: check base_index for validity
     #[inline]
-    pub fn get_base<'b>(&'b self, base_index: i32) -> Base<'b> {
+    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b>> {
         Base::new(self, base_index)
     }
 
@@ -117,5 +117,36 @@ impl<'f> Drop for File<'f> {
     fn drop(&mut self) {
         self.close_by_ref()
             .expect(&format!("Failed to close {:?}", self))
+    }
+}
+
+impl<'f> Node<'f> for File<'f> {
+    type Item = ();
+    type Parent = File<'f>;
+    type Children = ();
+    const KIND: () = ();
+    fn path(&self) -> CgnsPath {
+        panic!("a `File` has no path")
+    }
+    fn read(&self) -> CgnsResult<Self::Item> {
+        panic!("can't read from a `File` Node")
+    }
+    fn write(_parent: &mut Self::Parent, _data: &Self::Item) -> CgnsResult<i32> {
+        panic!("can't write to a `File` Node")
+    }
+    fn new_unchecked(_parent: &'f Self::Parent, _index: i32) -> Self {
+        panic!("`File`s can only be created with the `open` function")
+    }
+    #[inline]
+    fn n_children(&self, _kind: Self::Children) -> CgnsResult<i32> {
+        self.n_bases()
+    }
+    #[inline]
+    fn parent(&self) -> &Self::Parent {
+        self
+    }
+    #[inline]
+    fn lib(&self) -> &'f Library {
+        self.lib
     }
 }

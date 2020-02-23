@@ -18,7 +18,8 @@ impl std::error::Error for CgnsLibraryError {}
 #[derive(Debug)]
 pub enum CgnsErrorKind {
     Library,
-    InputError,
+    ConversionError,
+    OutOfBounds,
     Other,
 }
 
@@ -29,7 +30,7 @@ impl std::fmt::Display for CgnsErrorKind {
 }
 
 pub struct CgnsError {
-    cause: Box<dyn std::error::Error>,
+    cause: Option<Box<dyn std::error::Error>>,
     kind: CgnsErrorKind,
 }
 
@@ -40,7 +41,11 @@ impl std::fmt::Display for CgnsError {
 }
 impl std::fmt::Debug for CgnsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "CgnsError({}): {}", self.kind, self.cause)
+        if let Some(cause) = &self.cause {
+            write!(f, "CgnsError({}): {}", self.kind, cause)
+        } else {
+            write!(f, "CgnsError({})", self.kind)
+        }
     }
 }
 impl std::error::Error for CgnsError {}
@@ -48,8 +53,8 @@ impl std::error::Error for CgnsError {}
 impl From<std::ffi::NulError> for CgnsError {
     fn from(err: std::ffi::NulError) -> Self {
         CgnsError {
-            cause: Box::new(err),
-            kind: CgnsErrorKind::InputError,
+            cause: Some(Box::new(err)),
+            kind: CgnsErrorKind::ConversionError,
         }
     }
 }
@@ -57,8 +62,8 @@ impl From<std::ffi::NulError> for CgnsError {
 impl From<std::str::Utf8Error> for CgnsError {
     fn from(err: std::str::Utf8Error) -> Self {
         CgnsError {
-            cause: Box::new(err),
-            kind: CgnsErrorKind::InputError,
+            cause: Some(Box::new(err)),
+            kind: CgnsErrorKind::ConversionError,
         }
     }
 }
@@ -68,7 +73,7 @@ impl From<std::ffi::FromBytesWithNulError> for CgnsError {
     fn from(err: std::ffi::FromBytesWithNulError) -> Self {
         CgnsError {
             cause: Box::new(err),
-            kind: CgnsErrorKind::InputError,
+            kind: CgnsErrorKind::ConversionError,
         }
     }
 }
@@ -78,7 +83,13 @@ impl CgnsError {
     pub fn library(ier: i32, messsage: String) -> Self {
         Self {
             kind: CgnsErrorKind::Library,
-            cause: Box::new(CgnsLibraryError { ier, messsage }),
+            cause: Some(Box::new(CgnsLibraryError { ier, messsage })),
+        }
+    }
+    pub fn out_of_bounds() -> Self {
+        Self {
+            kind: CgnsErrorKind::OutOfBounds,
+            cause: None,
         }
     }
 }
