@@ -1,25 +1,26 @@
 use super::*;
 
-pub struct CgnsLibraryError {
+pub struct LibraryError {
     ier: i32,
     messsage: String,
 }
-impl std::fmt::Display for CgnsLibraryError {
+impl std::fmt::Display for LibraryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.messsage)
     }
 }
-impl std::fmt::Debug for CgnsLibraryError {
+impl std::fmt::Debug for LibraryError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "CgnsError ({}): {}", self.ier, self.messsage)
     }
 }
 
-impl std::error::Error for CgnsLibraryError {}
+impl std::error::Error for LibraryError {}
 
 #[derive(Debug)]
 pub enum CgnsErrorKind {
-    Library,
+    LibraryCgns,
+    LibraryCgio,
     ConversionError,
     InvalidLibraryResult,
     OutOfBounds,
@@ -84,10 +85,16 @@ impl From<std::ffi::FromBytesWithNulError> for CgnsError {
 */
 
 impl CgnsError {
-    pub fn library(ier: i32, messsage: String) -> Self {
+    pub fn cgns(ier: i32, messsage: String) -> Self {
         Self {
-            kind: CgnsErrorKind::Library,
-            cause: Some(Box::new(CgnsLibraryError { ier, messsage })),
+            kind: CgnsErrorKind::LibraryCgns,
+            cause: Some(Box::new(LibraryError { ier, messsage })),
+        }
+    }
+    pub fn cgio(ier: i32, messsage: String) -> Self {
+        Self {
+            kind: CgnsErrorKind::LibraryCgio,
+            cause: Some(Box::new(LibraryError { ier, messsage })),
         }
     }
     pub fn out_of_bounds() -> Self {
@@ -121,7 +128,7 @@ pub fn to_cgns_result(ier: i32) -> CgnsResult<()> {
             .to_str()
             .unwrap()
             .to_string();
-        Err(CgnsError::library(ier, error))
+        Err(CgnsError::cgns(ier, error))
     } else {
         Ok(())
     }
@@ -142,7 +149,7 @@ pub fn to_cgio_result(ier: i32) -> CgnsResult<()> {
             .to_str()
             .unwrap()
             .to_string();
-        Err(CgnsError::library(ier, error))
+        Err(CgnsError::cgio(ier, error))
     } else {
         Ok(())
     }
