@@ -98,7 +98,7 @@ fn iter_bases() {
 
     assert_eq!(
         0,
-        file.bases()
+        Base::iter(&file)
             .expect("failed to read number of bases")
             .count()
     );
@@ -134,7 +134,7 @@ fn iter_bases() {
     .expect("failed to write base");
 
     let mut n = 0;
-    for base in file.bases().expect("failed to read number of bases") {
+    for base in Base::iter(&file).expect("failed to read number of bases") {
         println!("base: {:#?}", base.read().expect("failed to read base"));
         n += 1;
     }

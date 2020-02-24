@@ -19,13 +19,38 @@ pub struct DescriptorData {
 
 impl<'p, P> Node for Descriptor<'p, P> where P: ParentNode<'p, Self> {}
 
+impl<'p, P> ChildNode<'p> for Descriptor<'p, P>
+where
+    P: ParentNode<'p, Self>,
+{
+    type Parent = P;
+    fn parent(&self) -> &Self::Parent {
+        self.parent
+    }
+}
+
+impl<'p, N> ParentNode<'p, Descriptor<'p, Self>> for N
+where
+    N: Node + GotoTarget + BaseRefNode,
+{
+    fn n_children(&self) -> CgnsResult<i32> {
+        self.goto()?;
+
+        let mut n_descriptors = 0;
+
+        to_cgns_result(unsafe { bindings::cg_ndescriptors(&mut n_descriptors) })?;
+
+        Ok(n_descriptors)
+    }
+}
+
 impl<'p, P> GotoTarget for Descriptor<'p, P>
 where
     P: ParentNode<'p, Self> + GotoTarget + BaseRefNode,
 {
-    const NodeLabel: CgnsNodeLabel = CgnsNodeLabel::Descriptor;
-    fn name(&self) -> CgnsResult<&str> {
-        Ok(&self.read()?.name)
+    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Descriptor;
+    fn name(&self) -> CgnsResult<String> {
+        Ok(String::from(&self.read()?.name))
     }
     fn path(&self) -> CgnsPath {
         let mut path = self.parent.path();
@@ -66,7 +91,7 @@ where
         let mut name = [MaybeUninit::<c_char>::uninit(); 33];
         let mut value = MaybeUninit::<*mut c_char>::uninit();
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_descriptor_read(
                 self.index(),
                 name.as_mut_ptr() as *mut c_char,
@@ -83,7 +108,7 @@ where
                 .to_string(),
         };
 
-        to_cgns_result!(unsafe { bindings::cg_free(value.assume_init() as *mut c_void) })?;
+        to_cgns_result(unsafe { bindings::cg_free(value.assume_init() as *mut c_void) })?;
 
         Ok(descriptor_data)
     }
@@ -93,24 +118,9 @@ where
 
         parent.goto()?;
 
-        to_cgns_result!(unsafe { bindings::cg_descriptor_write(name.as_ptr(), value.as_ptr()) })?;
+        to_cgns_result(unsafe { bindings::cg_descriptor_write(name.as_ptr(), value.as_ptr()) })?;
 
         Ok(-1)
-    }
-}
-
-impl<'p, N> ParentNode<'p, Descriptor<'p, Self>> for N
-where
-    N: Node + GotoTarget + BaseRefNode,
-{
-    fn n_children(&self) -> CgnsResult<i32> {
-        self.goto()?;
-
-        let mut n_descriptors = 0;
-
-        to_cgns_result!(unsafe { bindings::cg_ndescriptors(&mut n_descriptors) })?;
-
-        Ok(n_descriptors)
     }
 }
 
@@ -124,15 +134,7 @@ where
     }
 }
 
-impl<'p, P> ChildNode<'p> for Descriptor<'p, P>
-where
-    P: ParentNode<'p, Descriptor<'p, P>>,
-{
-    type Parent = P;
-    fn parent(&self) -> &Self::Parent {
-        self.parent
-    }
-}
+// impl<'p, P> IterableNode<'p> for Descriptor<'p, P> where P: BaseRefNode + GotoTarget {}
 
 // TODO: why do we need this + Sized bound?
 pub trait DescriptorParent<'p>:

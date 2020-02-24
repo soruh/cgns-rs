@@ -13,7 +13,14 @@ impl<'f> std::fmt::Debug for File<'f> {
 
 impl<'f> File<'f> {
     fn close_by_ref(&mut self) -> CgnsResult<()> {
-        to_cgns_result!(unsafe { bindings::cg_close(self.file_number) })
+        to_cgns_result(unsafe { bindings::cg_close(self.file_number) })
+    }
+
+    // make sure this `File` isn't used after we close it
+    pub fn close(mut self) -> CgnsResult<()> {
+        self.close_by_ref()?;
+        std::mem::forget(self); // we don't want to call `close` twice...
+        Ok(())
     }
 
     pub(crate) fn open<'l>(
@@ -24,20 +31,11 @@ impl<'f> File<'f> {
         let filename = CString::new(filename)?;
         let mut file_number = 0;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_open(filename.as_ptr(), mode as i32, &mut file_number)
         })?;
 
         Ok(File { file_number, lib })
-    }
-
-    // make sure this `File` isn't used after we close it
-    pub fn close(mut self) -> CgnsResult<()> {
-        self.close_by_ref()?;
-
-        std::mem::forget(self); // we don't want to call `close` twice...
-
-        Ok(())
     }
 
     /// exposes the cgns internal file_number (`fn`) of this file
@@ -49,7 +47,7 @@ impl<'f> File<'f> {
     pub fn get_cgio_number(&self) -> CgnsResult<i32> {
         let mut cgio_number = 0;
 
-        to_cgns_result!(unsafe { bindings::cg_get_cgio(self.file_number, &mut cgio_number) })?;
+        to_cgns_result(unsafe { bindings::cg_get_cgio(self.file_number, &mut cgio_number) })?;
 
         Ok(cgio_number)
     }
@@ -58,7 +56,7 @@ impl<'f> File<'f> {
     pub fn root_id(&self) -> CgnsResult<f64> {
         let mut root_id = 0.0;
 
-        to_cgns_result!(unsafe { bindings::cg_root_id(self.file_number, &mut root_id) })?;
+        to_cgns_result(unsafe { bindings::cg_root_id(self.file_number, &mut root_id) })?;
 
         Ok(root_id)
     }
@@ -76,7 +74,7 @@ impl<'f> File<'f> {
     ) -> CgnsResult<()> {
         let filename = CString::new(filename)?;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_save_as(
                 self.file_number,
                 filename.as_ptr(),
@@ -93,24 +91,6 @@ impl<'f> File<'f> {
     #[inline]
     pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b>> {
         Base::new(self, base_index)
-    }
-
-    /// Get number of CGNS base nodes in file
-    pub fn n_bases(&self) -> CgnsResult<i32> {
-        let mut nbases = 0;
-
-        to_cgns_result!(unsafe { bindings::cg_nbases(self.file_number, &mut nbases) })?;
-
-        Ok(nbases)
-    }
-
-    // TODO: abstract into trait
-    pub fn bases<'b>(&'b self) -> CgnsResult<Bases<'b>> {
-        Ok(Bases {
-            current: 1,
-            max: self.n_bases()?,
-            file: self,
-        })
     }
 }
 
@@ -132,6 +112,8 @@ impl<'f> IndexableNode for File<'f> {
 
 impl<'f> ParentNode<'f, Base<'f>> for File<'f> {
     fn n_children(&self) -> CgnsResult<i32> {
-        self.n_bases()
+        let mut nbases = 0;
+        to_cgns_result(unsafe { bindings::cg_nbases(self.file_number, &mut nbases) })?;
+        Ok(nbases)
     }
 }

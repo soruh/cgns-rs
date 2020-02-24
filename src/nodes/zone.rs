@@ -40,7 +40,7 @@ impl<'z> Zone<'z> {
     pub fn index_dim(&self) -> CgnsResult<i32> {
         let mut index_dim = 0;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_index_dim(
                 self.file().file_number(),
                 self.base().index(),
@@ -56,6 +56,11 @@ impl<'z> Zone<'z> {
 impl<'z> Node for Zone<'z> {}
 
 impl<'z> GotoTarget for Zone<'z> {
+    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Zone;
+    fn name(&self) -> CgnsResult<String> {
+        Ok(String::from(&self.read()?.name))
+    }
+
     fn path(&self) -> CgnsPath {
         let mut path = self.base.path();
         path.nodes.push((CgnsNodeLabel::Zone, self.zone_index));
@@ -67,7 +72,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
     type Item = ZoneData;
     fn read(&self) -> CgnsResult<Self::Item> {
         let mut zone_type: bindings::ZoneType_t = 0;
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_zone_type(
                 self.file().file_number(),
                 self.base().index(),
@@ -79,7 +84,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
         let mut zonename = [MaybeUninit::<c_char>::uninit(); 33];
         let mut size_buffer = [MaybeUninit::<i32>::uninit(); 9];
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_zone_read(
                 self.file().file_number(),
                 self.base().index(),
@@ -169,7 +174,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
             }
         };
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_zone_write(
                 parent.file().file_number(),
                 parent.index(),
@@ -216,13 +221,9 @@ impl<'z> SiblingNode<'z> for Zone<'z> {
     }
 }
 
-/*
-impl<'z> ParentNode<'z, > for Zone<'z> {
-    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
-        match child_kind {}
-    }
-}
-*/
+// impl<'z> IterableNode<'z> for Zone<'z> {}
 
-pub struct Zones {}
 // TODO
+// impl<'z> ParentNode<'z> for Zone<'z> {
+//     fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {}
+// }

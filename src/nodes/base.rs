@@ -4,27 +4,6 @@ use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 
-pub struct Bases<'b> {
-    pub(crate) current: i32,
-    pub(crate) max: i32,
-    pub(crate) file: &'b File<'b>,
-}
-
-impl<'b> Iterator for Bases<'b> {
-    type Item = Base<'b>;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.current <= self.max {
-            let base = Base::new_unchecked(self.file, self.current);
-
-            self.current += 1;
-
-            Some(base)
-        } else {
-            None
-        }
-    }
-}
-
 pub struct Base<'b> {
     base_index: i32,
     file: &'b File<'b>,
@@ -43,7 +22,7 @@ impl<'b> Base<'b> {
     pub fn dim(&self) -> CgnsResult<i32> {
         let mut cell_dim = 0;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_cell_dim(self.file().file_number(), self.index(), &mut cell_dim)
         })?;
 
@@ -53,7 +32,7 @@ impl<'b> Base<'b> {
     pub fn n_zones(&self) -> CgnsResult<i32> {
         let mut nzones = 0;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_nzones(self.file().file_number(), self.index(), &mut nzones)
         })?;
 
@@ -73,9 +52,9 @@ impl<'b> Base<'b> {
 impl<'b> Node for Base<'b> {}
 
 impl<'b> GotoTarget for Base<'b> {
-    const NodeLabel: CgnsNodeLabel = CgnsNodeLabel::Base;
-    fn name(&self) -> CgnsResult<&str> {
-        Ok(&self.read()?.name)
+    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Base;
+    fn name(&self) -> CgnsResult<String> {
+        Ok(String::from(&self.read()?.name))
     }
     fn path(&self) -> CgnsPath {
         CgnsPath {
@@ -102,7 +81,7 @@ impl<'b> RwNode<'b> for Base<'b> {
         let mut phys_dim = 0;
         let mut basename: [MaybeUninit<c_char>; 33] = [MaybeUninit::uninit(); 33];
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_base_read(
                 self.file().file_number(),
                 self.index(),
@@ -129,7 +108,7 @@ impl<'b> RwNode<'b> for Base<'b> {
         let basename = CString::new(data.name.clone())?;
         let mut base_index = 0;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_base_write(
                 parent.file_number(),
                 basename.as_ptr(),

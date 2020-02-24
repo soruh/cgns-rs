@@ -1,3 +1,5 @@
+use super::*;
+
 pub struct CgnsLibraryError {
     ier: i32,
     messsage: String,
@@ -112,17 +114,14 @@ impl CgnsError {
 
 pub type CgnsResult<T> = Result<T, CgnsError>;
 
-macro_rules! to_cgns_result {
-    ($ier: expr) => {{
-        let ier = $ier;
-        if ier != 0 {
-            let error: String = unsafe { std::ffi::CStr::from_ptr(bindings::cg_get_error()) }
-                .to_str()
-                .unwrap()
-                .to_string();
-            Err(CgnsError::library(ier, error))
-        } else {
-            Ok(())
-        }
-    }};
+pub fn to_cgns_result(ier: i32) -> CgnsResult<()> {
+    if ier != 0 {
+        let error: String = unsafe { std::ffi::CStr::from_ptr(bindings::cg_get_error()) }
+            .to_str()
+            .unwrap()
+            .to_string();
+        Err(CgnsError::library(ier, error))
+    } else {
+        Ok(())
+    }
 }

@@ -6,17 +6,20 @@ pub enum CgnsNodeLabel {
     Base,
     SimulationType,
     Descriptor,
+    Ordinal,
     Custom(String),
 }
 
 impl CgnsNodeLabel {
     pub fn as_str<'a>(&'a self) -> &'a str {
+        use CgnsNodeLabel::*;
         match self {
-            CgnsNodeLabel::Zone => "Zone_t",
-            CgnsNodeLabel::Base => "CGNSBase_t",
-            CgnsNodeLabel::SimulationType => "SimulationType_t",
-            CgnsNodeLabel::Descriptor => "Descriptor_t",
-            CgnsNodeLabel::Custom(inner) => &inner,
+            Ordinal => "Ordinal_t",
+            Zone => "Zone_t",
+            Base => "CGNSBase_t",
+            SimulationType => "SimulationType_t",
+            Descriptor => "Descriptor_t",
+            Custom(inner) => &inner,
         }
     }
 }

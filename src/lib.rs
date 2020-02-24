@@ -28,7 +28,7 @@ pub static LIB_IN_USE: AtomicBool = AtomicBool::new(false);
 /// represents access to the CGNS library. Only one instance can exist at a time due to
 /// the design of the CGNS library
 pub struct Library {
-    _phantom: PhantomData<()>,
+    _phantom: PhantomData<*const ()>,
 }
 
 impl Library {
@@ -67,7 +67,7 @@ impl Library {
             indicies.push(*index);
         }
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_golist(
                 path.file_number,
                 path.base_index,
@@ -80,8 +80,7 @@ impl Library {
 
     pub fn delete_node(&self, node_name: String) -> CgnsResult<()> {
         let node_name = CString::new(node_name)?;
-
-        to_cgns_result!(unsafe { bindings::cg_delete_node(node_name.as_ptr()) })
+        to_cgns_result(unsafe { bindings::cg_delete_node(node_name.as_ptr()) })
     }
 
     pub fn current_path(&self) -> CgnsResult<CgnsPath> {
@@ -99,7 +98,7 @@ impl Library {
         let mut indecies: [MaybeUninit<c_int>; bindings::CG_MAX_GOTO_DEPTH as usize] =
             [MaybeUninit::uninit(); bindings::CG_MAX_GOTO_DEPTH as usize];
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_where(
                 &mut file_number,
                 &mut base_index,

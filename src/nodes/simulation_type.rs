@@ -14,10 +14,10 @@ pub struct SimulationType<'s> {
 impl<'s> Node for SimulationType<'s> {}
 
 impl<'s> GotoTarget for SimulationType<'s> {
-    const NodeLabel: CgnsNodeLabel = CgnsNodeLabel::SimulationType;
+    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::SimulationType;
     fn path(&self) -> CgnsPath {
         let mut path = self.parent().path();
-        path.nodes.push((Self::NodeLabel, 0));
+        path.nodes.push((Self::NODE_LABEL, 0));
         path
     }
 }
@@ -35,7 +35,7 @@ impl<'s> RwNode<'s> for SimulationType<'s> {
     fn read(&self) -> CgnsResult<Self::Item> {
         let mut simulation_type = 0;
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_simulation_type_read(
                 self.file().file_number(),
                 self.base().index(),
@@ -60,7 +60,7 @@ impl<'s> RwNode<'s> for SimulationType<'s> {
             SimulationTypeData::NonTimeAccurate => bindings::SimulationType_t_NonTimeAccurate,
         };
 
-        to_cgns_result!(unsafe {
+        to_cgns_result(unsafe {
             bindings::cg_simulation_type_write(
                 parent.file().file_number(),
                 parent.index(),

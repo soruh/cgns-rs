@@ -1,10 +1,10 @@
 use super::*;
 
 pub trait GotoTarget: Node {
-    const NodeLabel: CgnsNodeLabel;
+    const NODE_LABEL: CgnsNodeLabel;
     /// Note: This `must` be overwritten on SiblingNodes
-    fn name(&self) -> CgnsResult<&str> {
-        Ok(Self::NodeLabel.as_str())
+    fn name(&self) -> CgnsResult<String> {
+        Ok(Self::NODE_LABEL.as_str().into())
     }
     fn path(&self) -> CgnsPath;
     #[inline]
@@ -33,19 +33,9 @@ pub trait RwNode<'n>: ChildNode<'n> {
         Self: Sized + GotoTarget,
         Self::Parent: GotoTarget + BaseRefNode,
     {
-        if let Some((node_label, node_index)) = self.path().nodes.last() {
-            let lib = parent.lib();
-
-            parent.goto_lib(&lib)?;
-
-            let node_name = todo!();
-
-            lib.delete_node(node_name)?;
-
-            Ok(())
-        } else {
-            Err(CgnsError::node_not_found())
-        }
+        let lib = parent.lib();
+        parent.goto_lib(&lib)?;
+        lib.delete_node(self.name()?)
     }
 }
 
@@ -79,11 +69,42 @@ pub trait IndexableNode: Node {
     fn index(&self) -> i32;
 }
 
-pub trait IterableNode<'p>: SiblingNode<'p> + IndexableNode {
-    // TODO: iter_mut?
-    type Iterator: Iterator;
-    fn iter(parent: Self::Parent) -> Self::Iterator;
+pub struct NodeIter<'p, S>
+where
+    S: SiblingNode<'p>,
+{
+    n_items: i32,
+    current: i32,
+    parent: &'p S::Parent,
 }
+
+impl<'p, S> Iterator for NodeIter<'p, S>
+where
+    S: SiblingNode<'p>,
+{
+    type Item = S;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.current < self.n_items {
+            self.current += 1;
+            // CGNS idecies start at 1, so we increment before using the index
+            Some(S::new_unchecked(self.parent, self.current))
+        } else {
+            None
+        }
+    }
+}
+
+pub trait IterableNode<'p>: SiblingNode<'p> {
+    fn iter(parent: &'p Self::Parent) -> CgnsResult<NodeIter<'p, Self>> {
+        Ok(NodeIter {
+            current: 0,
+            n_items: parent.n_children()?,
+            parent,
+        })
+    }
+}
+
+impl<'p, N> IterableNode<'p> for N where N: SiblingNode<'p> {}
 
 pub trait SiblingNode<'p>: ChildNode<'p> + IndexableNode {
     fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
