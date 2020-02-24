@@ -123,8 +123,11 @@ impl<'f> Drop for File<'f> {
 
 impl<'f> Node for File<'f> {}
 
-pub enum FileChildren {
-    Base,
+impl<'f> IndexableNode for File<'f> {
+    #[inline]
+    fn index(&self) -> i32 {
+        self.file_number
+    }
 }
 
 impl<'f> ParentNode<'f, Base<'f>> for File<'f> {

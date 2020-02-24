@@ -73,6 +73,10 @@ impl<'b> Base<'b> {
 impl<'b> Node for Base<'b> {}
 
 impl<'b> GotoTarget for Base<'b> {
+    const NodeLabel: CgnsNodeLabel = CgnsNodeLabel::Base;
+    fn name(&self) -> CgnsResult<&str> {
+        Ok(&self.read()?.name)
+    }
     fn path(&self) -> CgnsPath {
         CgnsPath {
             file_number: self.file().file_number(),
@@ -160,11 +164,14 @@ impl<'b> ChildNode<'b> for Base<'b> {
     }
 }
 
-impl<'b> SiblingNode<'b> for Base<'b> {
+impl<'b> IndexableNode for Base<'b> {
     #[inline]
     fn index(&self) -> i32 {
         self.base_index
     }
+}
+
+impl<'b> SiblingNode<'b> for Base<'b> {
     #[inline]
     fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b> {
         Base {

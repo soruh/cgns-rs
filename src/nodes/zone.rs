@@ -199,11 +199,14 @@ impl<'z> BaseRefNode for Zone<'z> {
     }
 }
 
-impl<'z> SiblingNode<'z> for Zone<'z> {
+impl<'z> IndexableNode for Zone<'z> {
     #[inline]
     fn index(&self) -> i32 {
         self.zone_index
     }
+}
+
+impl<'z> SiblingNode<'z> for Zone<'z> {
     #[inline]
     fn new_unchecked(parent: &'z Self::Parent, zone_index: i32) -> Self {
         Zone {

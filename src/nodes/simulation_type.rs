@@ -14,9 +14,10 @@ pub struct SimulationType<'s> {
 impl<'s> Node for SimulationType<'s> {}
 
 impl<'s> GotoTarget for SimulationType<'s> {
+    const NodeLabel: CgnsNodeLabel = CgnsNodeLabel::SimulationType;
     fn path(&self) -> CgnsPath {
-        let mut path = self.base.path();
-        path.nodes.push((CgnsNodeLabel::SimulationType, 0));
+        let mut path = self.parent().path();
+        path.nodes.push((Self::NodeLabel, 0));
         path
     }
 }

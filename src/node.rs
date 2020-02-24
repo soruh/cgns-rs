@@ -1,6 +1,11 @@
 use super::*;
 
-pub trait GotoTarget {
+pub trait GotoTarget: Node {
+    const NodeLabel: CgnsNodeLabel;
+    /// Note: This `must` be overwritten on SiblingNodes
+    fn name(&self) -> CgnsResult<&str> {
+        Ok(Self::NodeLabel.as_str())
+    }
     fn path(&self) -> CgnsPath;
     #[inline]
     fn goto_lib(&self, lib: &Library) -> CgnsResult<()> {
@@ -15,10 +20,7 @@ pub trait GotoTarget {
     }
 }
 
-pub trait RwNode<'n>
-where
-    Self: ChildNode<'n>,
-{
+pub trait RwNode<'n>: ChildNode<'n> {
     type Item;
 
     fn read(&self) -> CgnsResult<Self::Item>;
@@ -28,13 +30,13 @@ where
     // TODO: should we check that there are no such nodes?
     fn delete(self, parent: &mut Self::Parent) -> CgnsResult<()>
     where
-        Self: Sized + GotoTarget + BaseRefNode,
-        Self::Parent: GotoTarget,
+        Self: Sized + GotoTarget,
+        Self::Parent: GotoTarget + BaseRefNode,
     {
         if let Some((node_label, node_index)) = self.path().nodes.last() {
-            let lib = self.lib();
+            let lib = parent.lib();
 
-            self.parent().goto_lib(&lib)?;
+            parent.goto_lib(&lib)?;
 
             let node_name = todo!();
 
@@ -47,19 +49,16 @@ where
     }
 }
 
-pub trait ChildNode<'p>
+pub trait ChildNode<'p>: Node + 'p + Sized
+// TODO: Why do we need this + Sized bound?
 where
-    Self: Node + 'p + Sized, // TODO: Why do we need this + Sized bound?
     Self::Parent: ParentNode<'p, Self>,
 {
     type Parent;
     fn parent(&self) -> &Self::Parent;
 }
 
-pub trait BaseRefNode
-where
-    Self: Node,
-{
+pub trait BaseRefNode: Node {
     fn base<'b>(&'b self) -> &'b Base;
 
     #[inline]
@@ -72,19 +71,21 @@ where
     }
 }
 
-pub trait OnlyChildNode<'p>
-where
-    Self: ChildNode<'p>,
-{
+pub trait OnlyChildNode<'p>: ChildNode<'p> {
     fn new(parent: &'p Self::Parent) -> Self;
 }
 
-pub trait SiblingNode<'p>
-where
-    Self: ChildNode<'p>,
-    Self::Parent: 'p,
-{
+pub trait IndexableNode: Node {
     fn index(&self) -> i32;
+}
+
+pub trait IterableNode<'p>: SiblingNode<'p> + IndexableNode {
+    // TODO: iter_mut?
+    type Iterator: Iterator;
+    fn iter(parent: Self::Parent) -> Self::Iterator;
+}
+
+pub trait SiblingNode<'p>: ChildNode<'p> + IndexableNode {
     fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
     fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self>
     where
@@ -98,9 +99,8 @@ where
     }
 }
 
-pub trait ParentNode<'p, C>
+pub trait ParentNode<'p, C>: Node
 where
-    Self: Node,
     C: ChildNode<'p> + 'p,
 {
     fn n_children(&self) -> CgnsResult<i32>

@@ -3,6 +3,7 @@ use super::*;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CgnsNodeLabel {
     Zone,
+    Base,
     SimulationType,
     Descriptor,
     Custom(String),
@@ -12,6 +13,7 @@ impl CgnsNodeLabel {
     pub fn as_str<'a>(&'a self) -> &'a str {
         match self {
             CgnsNodeLabel::Zone => "Zone_t",
+            CgnsNodeLabel::Base => "CGNSBase_t",
             CgnsNodeLabel::SimulationType => "SimulationType_t",
             CgnsNodeLabel::Descriptor => "Descriptor_t",
             CgnsNodeLabel::Custom(inner) => &inner,
