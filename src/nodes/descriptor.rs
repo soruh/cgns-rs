@@ -1,4 +1,7 @@
 use super::*;
+use std::ffi::{CStr, CString};
+use std::mem::MaybeUninit;
+use std::os::raw::{c_char, c_void};
 
 pub struct Descriptor<'p, P>
 where
@@ -8,7 +11,10 @@ where
     descriptor_index: i32,
 }
 
-pub struct DescriptorData {}
+pub struct DescriptorData {
+    name: String,
+    value: String,
+}
 
 impl<'p, P> Node for Descriptor<'p, P> where P: Node {}
 
@@ -62,12 +68,42 @@ impl<'p, P> RwNode<'p> for Descriptor<'p, P>
 where
     P: ParentNode<'p, Descriptor<'p, P>>, // TODO: + 'p ?
     Self: ChildNode<'p>,
+    Self::Parent: GotoTarget + LeafNode,
 {
     type Item = DescriptorData;
     fn read(&self) -> CgnsResult<Self::Item> {
-        unimplemented!()
+        let mut name = [MaybeUninit::<c_char>::uninit(); 33];
+        let mut value = MaybeUninit::<*mut c_char>::uninit();
+
+        to_cgns_result!(unsafe {
+            bindings::cg_descriptor_read(
+                self.descriptor_index,
+                name.as_mut_ptr() as *mut c_char,
+                value.as_mut_ptr(),
+            )
+        })?;
+
+        let descriptor_data = DescriptorData {
+            name: unsafe { CStr::from_ptr(name.as_ptr() as *const c_char) }
+                .to_str()?
+                .to_string(),
+            value: unsafe { CStr::from_ptr(value.assume_init()) }
+                .to_str()?
+                .to_string(),
+        };
+
+        to_cgns_result!(unsafe { bindings::cg_free(value.assume_init() as *mut c_void) })?;
+
+        Ok(descriptor_data)
     }
     fn write(parent: &mut Self::Parent, data: &Self::Item) -> CgnsResult<i32> {
-        unimplemented!()
+        let name = CString::new(data.name.clone())?;
+        let value = CString::new(data.value.clone())?;
+
+        parent.goto()?;
+
+        to_cgns_result!(unsafe { bindings::cg_descriptor_write(name.as_ptr(), value.as_ptr()) })?;
+
+        Ok(-1)
     }
 }
