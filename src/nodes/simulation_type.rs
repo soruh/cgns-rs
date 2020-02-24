@@ -36,7 +36,7 @@ impl<'s> RwNode<'s> for SimulationType<'s> {
         let mut simulation_type = 0;
 
         to_cgns_result(unsafe {
-            bindings::cg_simulation_type_read(
+            cgns_bindings::cg_simulation_type_read(
                 self.file().file_number(),
                 self.base().index(),
                 &mut simulation_type,
@@ -44,24 +44,24 @@ impl<'s> RwNode<'s> for SimulationType<'s> {
         })?;
 
         Ok(match simulation_type {
-            bindings::CG_Null => SimulationTypeData::Null,
-            bindings::CG_UserDefined => SimulationTypeData::UserDefined,
-            bindings::SimulationType_t_TimeAccurate => SimulationTypeData::TimeAccurate,
-            bindings::SimulationType_t_NonTimeAccurate => SimulationTypeData::NonTimeAccurate,
+            cgns_bindings::CG_Null => SimulationTypeData::Null,
+            cgns_bindings::CG_UserDefined => SimulationTypeData::UserDefined,
+            cgns_bindings::SimulationType_t_TimeAccurate => SimulationTypeData::TimeAccurate,
+            cgns_bindings::SimulationType_t_NonTimeAccurate => SimulationTypeData::NonTimeAccurate,
 
             _ => Err(CgnsError::invalid_lib_result())?,
         })
     }
     fn write(parent: &mut Self::Parent, data: &Self::Item) -> CgnsResult<i32> {
         let simulation_type = match data {
-            SimulationTypeData::Null => bindings::CG_Null,
-            SimulationTypeData::UserDefined => bindings::CG_UserDefined,
-            SimulationTypeData::TimeAccurate => bindings::SimulationType_t_TimeAccurate,
-            SimulationTypeData::NonTimeAccurate => bindings::SimulationType_t_NonTimeAccurate,
+            SimulationTypeData::Null => cgns_bindings::CG_Null,
+            SimulationTypeData::UserDefined => cgns_bindings::CG_UserDefined,
+            SimulationTypeData::TimeAccurate => cgns_bindings::SimulationType_t_TimeAccurate,
+            SimulationTypeData::NonTimeAccurate => cgns_bindings::SimulationType_t_NonTimeAccurate,
         };
 
         to_cgns_result(unsafe {
-            bindings::cg_simulation_type_write(
+            cgns_bindings::cg_simulation_type_write(
                 parent.file().file_number(),
                 parent.index(),
                 simulation_type,

@@ -38,7 +38,7 @@ where
 
         let mut n_descriptors = 0;
 
-        to_cgns_result(unsafe { bindings::cg_ndescriptors(&mut n_descriptors) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_ndescriptors(&mut n_descriptors) })?;
 
         Ok(n_descriptors)
     }
@@ -92,7 +92,7 @@ where
         let mut value = MaybeUninit::<*mut c_char>::uninit();
 
         to_cgns_result(unsafe {
-            bindings::cg_descriptor_read(
+            cgns_bindings::cg_descriptor_read(
                 self.index(),
                 name.as_mut_ptr() as *mut c_char,
                 value.as_mut_ptr(),
@@ -108,7 +108,7 @@ where
                 .to_string(),
         };
 
-        to_cgns_result(unsafe { bindings::cg_free(value.assume_init() as *mut c_void) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_free(value.assume_init() as *mut c_void) })?;
 
         Ok(descriptor_data)
     }
@@ -118,7 +118,9 @@ where
 
         parent.goto()?;
 
-        to_cgns_result(unsafe { bindings::cg_descriptor_write(name.as_ptr(), value.as_ptr()) })?;
+        to_cgns_result(unsafe {
+            cgns_bindings::cg_descriptor_write(name.as_ptr(), value.as_ptr())
+        })?;
 
         Ok(-1)
     }

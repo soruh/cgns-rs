@@ -48,12 +48,12 @@ where
     type Item = OrdinalData;
     fn read(&self) -> CgnsResult<Self::Item> {
         let mut ordinal = 0;
-        to_cgns_result(unsafe { bindings::cg_ordinal_read(&mut ordinal) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_ordinal_read(&mut ordinal) })?;
         Ok(OrdinalData(ordinal))
     }
     fn write(parent: &mut Self::Parent, data: &Self::Item) -> CgnsResult<i32> {
         parent.goto()?;
-        to_cgns_result(unsafe { bindings::cg_ordinal_write(data.0) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_ordinal_write(data.0) })?;
         Ok(0)
     }
 }

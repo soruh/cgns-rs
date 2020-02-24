@@ -13,7 +13,7 @@ impl<'f> std::fmt::Debug for File<'f> {
 
 impl<'f> File<'f> {
     fn close_by_ref(&mut self) -> CgnsResult<()> {
-        to_cgns_result(unsafe { bindings::cg_close(self.file_number) })
+        to_cgns_result(unsafe { cgns_bindings::cg_close(self.file_number) })
     }
 
     // make sure this `File` isn't used after we close it
@@ -32,31 +32,31 @@ impl<'f> File<'f> {
         let mut file_number = 0;
 
         to_cgns_result(unsafe {
-            bindings::cg_open(filename.as_ptr(), mode as i32, &mut file_number)
+            cgns_bindings::cg_open(filename.as_ptr(), mode as i32, &mut file_number)
         })?;
 
         Ok(File { file_number, lib })
     }
 
-    /// exposes the cgns internal file_number (`fn`) of this file
+    /// exposes the cgns_bindings internal file_number (`fn`) of this file
     pub fn file_number(&self) -> i32 {
         self.file_number
     }
 
-    /// exposes the cgns internal cgio_number (`cgio_num`) of this file
+    /// exposes the cgns_bindings internal cgio_number (`cgio_num`) of this file
     pub fn get_cgio_number(&self) -> CgnsResult<i32> {
         let mut cgio_number = 0;
 
-        to_cgns_result(unsafe { bindings::cg_get_cgio(self.file_number, &mut cgio_number) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_get_cgio(self.file_number, &mut cgio_number) })?;
 
         Ok(cgio_number)
     }
 
-    /// exposes the cgns internal root_id (`root_id`) of this file
+    /// exposes the cgns_bindings internal root_id (`root_id`) of this file
     pub fn root_id(&self) -> CgnsResult<f64> {
         let mut root_id = 0.0;
 
-        to_cgns_result(unsafe { bindings::cg_root_id(self.file_number, &mut root_id) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_root_id(self.file_number, &mut root_id) })?;
 
         Ok(root_id)
     }
@@ -75,7 +75,7 @@ impl<'f> File<'f> {
         let filename = CString::new(filename)?;
 
         to_cgns_result(unsafe {
-            bindings::cg_save_as(
+            cgns_bindings::cg_save_as(
                 self.file_number,
                 filename.as_ptr(),
                 file_type as i32,
@@ -113,7 +113,7 @@ impl<'f> IndexableNode for File<'f> {
 impl<'f> ParentNode<'f, Base<'f>> for File<'f> {
     fn n_children(&self) -> CgnsResult<i32> {
         let mut nbases = 0;
-        to_cgns_result(unsafe { bindings::cg_nbases(self.file_number, &mut nbases) })?;
+        to_cgns_result(unsafe { cgns_bindings::cg_nbases(self.file_number, &mut nbases) })?;
         Ok(nbases)
     }
 }

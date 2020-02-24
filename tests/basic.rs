@@ -36,7 +36,7 @@ fn open_file() {
     let lib = Library::new();
 
     let file = lib
-        .open("test.cgns", CgnsOpenMode::Write)
+        .open("test.cgns_bindings", CgnsOpenMode::Write)
         .expect("Failed to open file");
 
     file.close().expect("Failed to close file");
@@ -47,7 +47,7 @@ fn get_cgio() {
     let lib = Library::new();
 
     let file = lib
-        .open("test.cgns", CgnsOpenMode::Write)
+        .open("test.cgns_bindings", CgnsOpenMode::Write)
         .expect("Failed to open file");
 
     let cgio = file.cgio().expect("Failed to get cgio");
@@ -60,10 +60,10 @@ fn get_cgio() {
 fn test_goto() {
     let lib = Library::new();
 
-    create_file(&lib, "goto_test.cgns").expect("Failed to create file");
+    create_file(&lib, "goto_test.cgns_bindings").expect("Failed to create file");
 
     let mut file = lib
-        .open("goto_test.cgns", CgnsOpenMode::Modify)
+        .open("goto_test.cgns_bindings", CgnsOpenMode::Modify)
         .expect("failed to open file");
 
     let base_index = Base::write(
@@ -90,10 +90,10 @@ fn test_goto() {
 fn iter_bases() {
     let lib = Library::new();
 
-    create_file(&lib, "iter_test.cgns").expect("Failed to create file");
+    create_file(&lib, "iter_test.cgns_bindings").expect("Failed to create file");
 
     let mut file = lib
-        .open("iter_test.cgns", CgnsOpenMode::Modify)
+        .open("iter_test.cgns_bindings", CgnsOpenMode::Modify)
         .expect("failed to open file");
 
     assert_eq!(
@@ -146,10 +146,10 @@ fn iter_bases() {
 fn read_write_base_and_descriptor() {
     let lib = Library::new();
 
-    create_file(&lib, "base_test.cgns").expect("Failed to create file");
+    create_file(&lib, "base_test.cgns_bindings").expect("Failed to create file");
 
     let mut file = lib
-        .open("base_test.cgns", CgnsOpenMode::Modify)
+        .open("base_test.cgns_bindings", CgnsOpenMode::Modify)
         .expect("Failed to open file");
 
     let base_data = base::BaseData {
@@ -188,10 +188,10 @@ fn read_write_base_and_descriptor() {
 fn read_write_zone_and_descriptor() {
     let lib = Library::new();
 
-    create_file(&lib, "desc_test.cgns").expect("Failed to create file");
+    create_file(&lib, "desc_test.cgns_bindings").expect("Failed to create file");
 
     let mut file = lib
-        .open("desc_test.cgns", CgnsOpenMode::Modify)
+        .open("desc_test.cgns_bindings", CgnsOpenMode::Modify)
         .expect("Failed to open file");
 
     let base_data = base::BaseData {

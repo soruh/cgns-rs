@@ -1,6 +1,6 @@
 // TODO: make types thread-unsafe?
 
-pub use libcgns_sys as bindings;
+pub use libcgns_sys::{cgio as cgio_bindings, cgns as cgns_bindings};
 
 #[macro_use]
 pub mod errors;
@@ -52,7 +52,10 @@ impl Library {
     }
 
     pub fn goto(&self, path: &CgnsPath) -> CgnsResult<()> {
-        let depth = path.nodes.len().min(bindings::CG_MAX_GOTO_DEPTH as usize);
+        let depth = path
+            .nodes
+            .len()
+            .min(cgns_bindings::CG_MAX_GOTO_DEPTH as usize);
 
         let mut label_buffs = Vec::with_capacity(depth);
         let mut labels = Vec::with_capacity(depth);
@@ -68,7 +71,7 @@ impl Library {
         }
 
         to_cgns_result(unsafe {
-            bindings::cg_golist(
+            cgns_bindings::cg_golist(
                 path.file_number,
                 path.base_index,
                 depth as i32,
@@ -80,7 +83,7 @@ impl Library {
 
     pub fn delete_node(&self, node_name: String) -> CgnsResult<()> {
         let node_name = CString::new(node_name)?;
-        to_cgns_result(unsafe { bindings::cg_delete_node(node_name.as_ptr()) })
+        to_cgns_result(unsafe { cgns_bindings::cg_delete_node(node_name.as_ptr()) })
     }
 
     pub fn current_path(&self) -> CgnsResult<CgnsPath> {
@@ -92,14 +95,14 @@ impl Library {
         let mut base_index = 0;
         let mut depth = 0;
 
-        let mut labels: [MaybeUninit<*mut c_char>; bindings::CG_MAX_GOTO_DEPTH as usize] =
-            [MaybeUninit::uninit(); bindings::CG_MAX_GOTO_DEPTH as usize];
+        let mut labels: [MaybeUninit<*mut c_char>; cgns_bindings::CG_MAX_GOTO_DEPTH as usize] =
+            [MaybeUninit::uninit(); cgns_bindings::CG_MAX_GOTO_DEPTH as usize];
 
-        let mut indecies: [MaybeUninit<c_int>; bindings::CG_MAX_GOTO_DEPTH as usize] =
-            [MaybeUninit::uninit(); bindings::CG_MAX_GOTO_DEPTH as usize];
+        let mut indecies: [MaybeUninit<c_int>; cgns_bindings::CG_MAX_GOTO_DEPTH as usize] =
+            [MaybeUninit::uninit(); cgns_bindings::CG_MAX_GOTO_DEPTH as usize];
 
         to_cgns_result(unsafe {
-            bindings::cg_where(
+            cgns_bindings::cg_where(
                 &mut file_number,
                 &mut base_index,
                 &mut depth,

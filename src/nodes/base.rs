@@ -23,7 +23,7 @@ impl<'b> Base<'b> {
         let mut cell_dim = 0;
 
         to_cgns_result(unsafe {
-            bindings::cg_cell_dim(self.file().file_number(), self.index(), &mut cell_dim)
+            cgns_bindings::cg_cell_dim(self.file().file_number(), self.index(), &mut cell_dim)
         })?;
 
         Ok(cell_dim)
@@ -33,7 +33,7 @@ impl<'b> Base<'b> {
         let mut nzones = 0;
 
         to_cgns_result(unsafe {
-            bindings::cg_nzones(self.file().file_number(), self.index(), &mut nzones)
+            cgns_bindings::cg_nzones(self.file().file_number(), self.index(), &mut nzones)
         })?;
 
         Ok(nzones)
@@ -82,7 +82,7 @@ impl<'b> RwNode<'b> for Base<'b> {
         let mut basename: [MaybeUninit<c_char>; 33] = [MaybeUninit::uninit(); 33];
 
         to_cgns_result(unsafe {
-            bindings::cg_base_read(
+            cgns_bindings::cg_base_read(
                 self.file().file_number(),
                 self.index(),
                 basename.as_mut_ptr() as *mut c_char,
@@ -109,7 +109,7 @@ impl<'b> RwNode<'b> for Base<'b> {
         let mut base_index = 0;
 
         to_cgns_result(unsafe {
-            bindings::cg_base_write(
+            cgns_bindings::cg_base_write(
                 parent.file_number(),
                 basename.as_ptr(),
                 data.cell_dim,

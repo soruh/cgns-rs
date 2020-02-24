@@ -41,7 +41,7 @@ impl<'z> Zone<'z> {
         let mut index_dim = 0;
 
         to_cgns_result(unsafe {
-            bindings::cg_index_dim(
+            cgns_bindings::cg_index_dim(
                 self.file().file_number(),
                 self.base().index(),
                 self.index(),
@@ -71,9 +71,9 @@ impl<'z> GotoTarget for Zone<'z> {
 impl<'z> RwNode<'z> for Zone<'z> {
     type Item = ZoneData;
     fn read(&self) -> CgnsResult<Self::Item> {
-        let mut zone_type: bindings::ZoneType_t = 0;
+        let mut zone_type: cgns_bindings::ZoneType_t = 0;
         to_cgns_result(unsafe {
-            bindings::cg_zone_type(
+            cgns_bindings::cg_zone_type(
                 self.file().file_number(),
                 self.base().index(),
                 self.zone_index,
@@ -85,7 +85,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
         let mut size_buffer = [MaybeUninit::<i32>::uninit(); 9];
 
         to_cgns_result(unsafe {
-            bindings::cg_zone_read(
+            cgns_bindings::cg_zone_read(
                 self.file().file_number(),
                 self.base().index(),
                 self.index(),
@@ -100,7 +100,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
 
         // [NVertexI, NVertexJ, NVertexK, NCellI, NCellJ, NCellK, NBoundVertexI, NBoundVertexJ, NBoundVertexK]
         Ok(match zone_type {
-            bindings::ZoneType_t_Structured => ZoneData {
+            cgns_bindings::ZoneType_t_Structured => ZoneData {
                 name,
                 size: ZoneSize::Structured(unsafe {
                     StructuredZoneSize {
@@ -117,7 +117,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
                     }
                 }),
             },
-            bindings::ZoneType_t_Unstructured => ZoneData {
+            cgns_bindings::ZoneType_t_Unstructured => ZoneData {
                 name,
                 size: ZoneSize::Unstructured(unsafe {
                     UnstructuredZoneSize {
@@ -156,7 +156,7 @@ impl<'z> RwNode<'z> for Zone<'z> {
                 size_buffer[4] = size.n_cell.1;
                 size_buffer[5] = size.n_cell.2;
 
-                (size_buffer, bindings::ZoneType_t_Structured)
+                (size_buffer, cgns_bindings::ZoneType_t_Structured)
             }
             ZoneSize::Unstructured(size) => {
                 let mut size_buffer = [0; 9];
@@ -170,12 +170,12 @@ impl<'z> RwNode<'z> for Zone<'z> {
                 size_buffer[7] = size.b_bound_vertex.1;
                 size_buffer[8] = size.b_bound_vertex.2;
 
-                (size_buffer, bindings::ZoneType_t_Unstructured)
+                (size_buffer, cgns_bindings::ZoneType_t_Unstructured)
             }
         };
 
         to_cgns_result(unsafe {
-            bindings::cg_zone_write(
+            cgns_bindings::cg_zone_write(
                 parent.file().file_number(),
                 parent.index(),
                 name.as_ptr(),

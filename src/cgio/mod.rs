@@ -1,8 +1,13 @@
 use super::*;
+
+pub mod types;
+pub use types::*;
+
 use std::marker::PhantomData;
+
 pub struct Cgio<'g> {
     cgio_number: i32,
-    root_id: Option<f64>,
+    root_node: CgioNode,
     _phantom: PhantomData<&'g ()>,
 }
 
@@ -13,7 +18,7 @@ impl<'g> Cgio<'g> {
 
         Ok(Cgio {
             cgio_number,
-            root_id: Some(root_id),
+            root_node: CgioNode { id: root_id },
             _phantom: Default::default(),
         })
     }
@@ -22,7 +27,7 @@ impl<'g> Cgio<'g> {
         self.cgio_number
     }
 
-    pub fn root_id(&self) -> Option<f64> {
-        self.root_id
+    pub fn root_id(&self) -> f64 {
+        self.root_node.id
     }
 }

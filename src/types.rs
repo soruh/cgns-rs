@@ -49,16 +49,16 @@ impl CgnsPath {
 
 #[repr(u32)]
 pub enum CgnsOpenMode {
-    // Closed = bindings::CG_MODE_CLOSED,
-    Modify = bindings::CG_MODE_MODIFY,
-    Read = bindings::CG_MODE_READ,
-    Write = bindings::CG_MODE_WRITE,
+    // Closed = cgns_bindings::CG_MODE_CLOSED,
+    Modify = cgns_bindings::CG_MODE_MODIFY,
+    Read = cgns_bindings::CG_MODE_READ,
+    Write = cgns_bindings::CG_MODE_WRITE,
 }
 
 #[repr(u32)]
 pub enum CgnsFileType {
-    ADF = bindings::CG_FILE_ADF,
-    ADF2 = bindings::CG_FILE_ADF2,
-    HDF5 = bindings::CG_FILE_HDF5,
-    NONE = bindings::CG_FILE_NONE,
+    ADF = cgns_bindings::CG_FILE_ADF,
+    ADF2 = cgns_bindings::CG_FILE_ADF2,
+    HDF5 = cgns_bindings::CG_FILE_HDF5,
+    NONE = cgns_bindings::CG_FILE_NONE,
 }
