@@ -29,8 +29,6 @@ pub struct ZoneData {
     pub size: ZoneSize,
 }
 
-pub enum ZoneChildren {}
-
 impl<'z> Zone<'z> {
     pub fn index_dim(&self) -> CgnsResult<i32> {
         let mut index_dim = 0;
@@ -58,7 +56,7 @@ impl<'z> GotoTarget for Zone<'z> {
     }
 }
 
-impl<'z> RwNode for Zone<'z> {
+impl<'z> RwNode<'z> for Zone<'z> {
     type Item = ZoneData;
     fn read(&self) -> CgnsResult<Self::Item> {
         let mut zone_type: bindings::ZoneType_t = 0;
@@ -179,9 +177,8 @@ impl<'z> RwNode for Zone<'z> {
     }
 }
 
-impl<'z> ChildNode for Zone<'z> {
+impl<'z> ChildNode<'z> for Zone<'z> {
     type Parent = Base<'z>;
-    const KIND: BaseChildren = BaseChildren::Zone;
 
     #[inline]
     fn parent(&self) -> &Self::Parent {
@@ -203,13 +200,13 @@ impl<'z> SiblingNode<'z> for Zone<'z> {
     }
 }
 
-impl<'z> ParentNode for Zone<'z> {
-    type Children = ZoneChildren;
-
+/*
+impl<'z> ParentNode<'z, > for Zone<'z> {
     fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
         match child_kind {}
     }
 }
+*/
 
 pub struct Zones {}
 // TODO

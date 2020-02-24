@@ -126,11 +126,8 @@ pub enum FileChildren {
     Base,
 }
 
-impl<'f> ParentNode for File<'f> {
-    type Children = FileChildren;
-    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
-        match child_kind {
-            FileChildren::Base => self.n_bases(),
-        }
+impl<'f> ParentNode<'f, Base<'f>> for File<'f> {
+    fn n_children(&self) -> CgnsResult<i32> {
+        self.n_bases()
     }
 }

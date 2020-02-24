@@ -30,11 +30,6 @@ pub struct Base<'b> {
     pub(crate) file: &'b File<'b>,
 }
 
-pub enum BaseChildren {
-    Zone,
-    SimulationType,
-}
-
 impl<'b> Base<'b> {
     pub fn file<'f>(&'f self) -> &'f File {
         self.file
@@ -87,7 +82,7 @@ impl<'b> GotoTarget for Base<'b> {
     }
 }
 
-impl<'b> RwNode for Base<'b> {
+impl<'b> RwNode<'b> for Base<'b> {
     type Item = BaseData;
 
     /// Read CGNS base information
@@ -137,20 +132,20 @@ impl<'b> RwNode for Base<'b> {
     }
 }
 
-impl<'b> ParentNode for Base<'b> {
-    type Children = BaseChildren;
-
-    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
-        match child_kind {
-            BaseChildren::Zone => self.n_zones(),
-            BaseChildren::SimulationType => Ok(1),
-        }
+impl<'b> ParentNode<'b, Zone<'b>> for Base<'b> {
+    fn n_children(&self) -> CgnsResult<i32> {
+        self.n_zones()
     }
 }
 
-impl<'b> ChildNode for Base<'b> {
+impl<'b> ParentNode<'b, SimulationType<'b>> for Base<'b> {
+    fn n_children(&self) -> CgnsResult<i32> {
+        Ok(1) // TODO
+    }
+}
+
+impl<'b> ChildNode<'b> for Base<'b> {
     type Parent = File<'b>;
-    const KIND: FileChildren = FileChildren::Base;
 
     #[inline]
     fn parent(&self) -> &Self::Parent {

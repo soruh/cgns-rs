@@ -27,7 +27,7 @@ impl<'s> LeafNode for SimulationType<'s> {
     }
 }
 
-impl<'s> RwNode for SimulationType<'s> {
+impl<'s> RwNode<'s> for SimulationType<'s> {
     type Item = SimulationTypeData;
 
     fn read(&self) -> CgnsResult<Self::Item> {
@@ -70,9 +70,9 @@ impl<'s> RwNode for SimulationType<'s> {
     }
 }
 
-impl<'s> ChildNode for SimulationType<'s> {
+impl<'s> ChildNode<'s> for SimulationType<'s> {
     type Parent = Base<'s>;
-    const KIND: BaseChildren = BaseChildren::SimulationType;
+
     fn parent(&self) -> &Self::Parent {
         self.base
     }

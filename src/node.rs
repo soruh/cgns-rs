@@ -15,9 +15,9 @@ pub trait GotoTarget {
     }
 }
 
-pub trait RwNode
+pub trait RwNode<'n>
 where
-    Self: ChildNode,
+    Self: ChildNode<'n>,
 {
     type Item;
 
@@ -47,17 +47,19 @@ where
     }
 }
 
-pub trait ChildNode
+pub trait ChildNode<'p>
 where
-    Self: Node,
-    Self::Parent: ParentNode,
+    Self: Node + 'p + Sized, // TODO: Why do we need this + Sized bound?
+    Self::Parent: ParentNode<'p, Self>,
 {
     type Parent;
-    const KIND: <Self::Parent as ParentNode>::Children;
     fn parent(&self) -> &Self::Parent;
 }
 
-pub trait LeafNode {
+pub trait LeafNode
+where
+    Self: Node,
+{
     fn base<'b>(&'b self) -> &'b Base;
 
     #[inline]
@@ -72,21 +74,22 @@ pub trait LeafNode {
 
 pub trait OnlyChildNode<'p>
 where
-    Self: ChildNode,
+    Self: ChildNode<'p>,
 {
     fn new(parent: &'p Self::Parent) -> Self;
 }
 
 pub trait SiblingNode<'p>
 where
-    Self: ChildNode,
+    Self: ChildNode<'p>,
+    Self::Parent: 'p,
 {
     fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
     fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self>
     where
         Self: Sized,
     {
-        if index > 0 && index <= parent.n_children(Self::KIND)? {
+        if index > 0 && index <= parent.n_children()? {
             Ok(Self::new_unchecked(parent, index))
         } else {
             Err(CgnsError::out_of_bounds())
@@ -94,13 +97,14 @@ where
     }
 }
 
-pub trait ParentNode
+pub trait ParentNode<'p, C>
 where
     Self: Node,
+    C: ChildNode<'p> + 'p,
 {
-    type Children;
-
-    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32>;
+    fn n_children(&self) -> CgnsResult<i32>
+    where
+        C: SiblingNode<'p>;
 }
 
 pub trait Node {}
