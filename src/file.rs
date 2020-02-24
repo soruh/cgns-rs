@@ -120,33 +120,17 @@ impl<'f> Drop for File<'f> {
     }
 }
 
-impl<'f> Node<'f> for File<'f> {
-    type Item = ();
-    type Parent = File<'f>;
-    type Children = ();
-    const KIND: () = ();
-    fn path(&self) -> CgnsPath {
-        panic!("a `File` has no path")
-    }
-    fn read(&self) -> CgnsResult<Self::Item> {
-        panic!("can't read from a `File` Node")
-    }
-    fn write(_parent: &mut Self::Parent, _data: &Self::Item) -> CgnsResult<i32> {
-        panic!("can't write to a `File` Node")
-    }
-    fn new_unchecked(_parent: &'f Self::Parent, _index: i32) -> Self {
-        panic!("`File`s can only be created with the `open` function")
-    }
-    #[inline]
-    fn n_children(&self, _kind: Self::Children) -> CgnsResult<i32> {
-        self.n_bases()
-    }
-    #[inline]
-    fn parent(&self) -> &Self::Parent {
-        self
-    }
-    #[inline]
-    fn lib(&self) -> &'f Library {
-        self.lib
+impl<'f> Node for File<'f> {}
+
+pub enum FileChildren {
+    Base,
+}
+
+impl<'f> ParentNode for File<'f> {
+    type Children = FileChildren;
+    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
+        match child_kind {
+            FileChildren::Base => self.n_bases(),
+        }
     }
 }

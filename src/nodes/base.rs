@@ -32,9 +32,18 @@ pub struct Base<'b> {
 
 pub enum BaseChildren {
     Zone,
+    SimulationType,
 }
 
 impl<'b> Base<'b> {
+    pub fn file<'f>(&'f self) -> &'f File {
+        self.file
+    }
+
+    pub fn lib<'l>(&'l self) -> &'l Library {
+        self.file().lib
+    }
+
     /// Get the cell dimension for the CGNS base
     pub fn dim(&self) -> CgnsResult<i32> {
         let mut cell_dim = 0;
@@ -66,11 +75,9 @@ impl<'b> Base<'b> {
     }
 }
 
-impl<'b> Node<'b> for Base<'b> {
-    type Item = BaseData;
-    type Parent = File<'b>;
-    type Children = BaseChildren;
-    const KIND: () = ();
+impl<'b> Node for Base<'b> {}
+
+impl<'b> GotoTarget for Base<'b> {
     fn path(&self) -> CgnsPath {
         CgnsPath {
             file_number: self.file.file_number,
@@ -78,6 +85,10 @@ impl<'b> Node<'b> for Base<'b> {
             nodes: vec![],
         }
     }
+}
+
+impl<'b> RwNode for Base<'b> {
+    type Item = BaseData;
 
     /// Read CGNS base information
     fn read(&self) -> CgnsResult<BaseData> {
@@ -124,22 +135,35 @@ impl<'b> Node<'b> for Base<'b> {
 
         Ok(base_index)
     }
+}
 
+impl<'b> ParentNode for Base<'b> {
+    type Children = BaseChildren;
+
+    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
+        match child_kind {
+            BaseChildren::Zone => self.n_zones(),
+            BaseChildren::SimulationType => Ok(1),
+        }
+    }
+}
+
+impl<'b> ChildNode for Base<'b> {
+    type Parent = File<'b>;
+    const KIND: FileChildren = FileChildren::Base;
+
+    #[inline]
+    fn parent(&self) -> &Self::Parent {
+        self.file
+    }
+}
+
+impl<'b> SiblingNode<'b> for Base<'b> {
     fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b> {
         Base {
             file: parent,
             base_index,
         }
-    }
-
-    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {
-        match child_kind {
-            Self::Children::Zone => self.n_zones(),
-        }
-    }
-    #[inline]
-    fn parent(&self) -> &Self::Parent {
-        self.file
     }
 }
 

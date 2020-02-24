@@ -19,7 +19,9 @@ impl std::error::Error for CgnsLibraryError {}
 pub enum CgnsErrorKind {
     Library,
     ConversionError,
+    InvalidLibraryResult,
     OutOfBounds,
+    NodeNotFound,
     Other,
 }
 
@@ -89,6 +91,20 @@ impl CgnsError {
     pub fn out_of_bounds() -> Self {
         Self {
             kind: CgnsErrorKind::OutOfBounds,
+            cause: None,
+        }
+    }
+
+    pub fn invalid_lib_result() -> Self {
+        Self {
+            kind: CgnsErrorKind::InvalidLibraryResult,
+            cause: None,
+        }
+    }
+
+    pub fn node_not_found() -> Self {
+        Self {
+            kind: CgnsErrorKind::NodeNotFound,
             cause: None,
         }
     }

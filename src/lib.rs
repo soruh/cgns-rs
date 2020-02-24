@@ -4,18 +4,18 @@ pub use libcgns_sys as bindings;
 
 #[macro_use]
 pub mod errors;
-pub mod base;
 pub mod cgio;
 pub mod file;
+pub mod node;
+pub mod nodes;
 pub mod types;
-pub mod zone;
 
-pub(crate) use base::{Base, BaseChildren, Bases};
-pub(crate) use cgio::Cgio;
+pub use cgio::Cgio;
 pub use errors::*;
-pub(crate) use file::File;
-pub(crate) use types::*;
-pub(crate) use zone::{Zone, ZoneChildren, Zones};
+pub use file::*;
+pub use node::*;
+pub use nodes::*;
+pub use types::*;
 
 use std::ffi::CString;
 use std::marker::PhantomData;
@@ -37,10 +37,10 @@ impl Library {
         Self::take()
     }
     pub fn take() -> Self {
-        assert!(
-            !LIB_IN_USE.compare_and_swap(false, true, Ordering::Acquire),
-            "The CGNS library is already in use."
-        );
+        if LIB_IN_USE.compare_and_swap(false, true, Ordering::Acquire) {
+            panic!("The CGNS library is already in use.");
+        }
+
         Self {
             _phantom: Default::default(),
         }
@@ -76,6 +76,12 @@ impl Library {
                 indicies.as_mut_ptr(),
             )
         })
+    }
+
+    pub fn delete_node(&self, node_name: String) -> CgnsResult<()> {
+        let node_name = CString::new(node_name)?;
+
+        to_cgns_result!(unsafe { bindings::cg_delete_node(node_name.as_ptr()) })
     }
 
     pub fn current_path(&self) -> CgnsResult<CgnsPath> {
@@ -138,40 +144,6 @@ impl std::fmt::Debug for Library {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         write!(f, "Library")
     }
-}
-
-pub trait Node<'p>
-where
-    Self: Sized,
-    Self::Parent: Node<'p> + 'p,
-{
-    type Item;
-    type Parent;
-    type Children;
-    const KIND: <Self::Parent as Node<'p>>::Children;
-
-    fn path(&self) -> CgnsPath;
-    fn read(&self) -> CgnsResult<Self::Item>;
-    fn write(parent: &mut Self::Parent, data: &Self::Item) -> CgnsResult<i32>;
-    fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
-    fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32>;
-    fn parent(&self) -> &Self::Parent;
-    #[inline]
-    fn lib(&self) -> &'p Library {
-        self.parent().lib()
-    }
-    fn goto(&self) -> CgnsResult<()> {
-        self.lib().goto(&self.path())
-    }
-    fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self> {
-        if index > 0 && index <= parent.n_children(Self::KIND)? {
-            Ok(Self::new_unchecked(parent, index))
-        } else {
-            Err(CgnsError::out_of_bounds())
-        }
-    }
-
-    // TODO: delete (goto -> parent + delete)
 }
 
 #[cfg(test)]
