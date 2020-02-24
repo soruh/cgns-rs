@@ -21,7 +21,8 @@ impl<'s> GotoTarget for SimulationType<'s> {
     }
 }
 
-impl<'s> LeafNode for SimulationType<'s> {
+impl<'s> BaseRefNode for SimulationType<'s> {
+    #[inline]
     fn base<'b>(&'b self) -> &'b Base {
         self.base
     }
@@ -35,8 +36,8 @@ impl<'s> RwNode<'s> for SimulationType<'s> {
 
         to_cgns_result!(unsafe {
             bindings::cg_simulation_type_read(
-                self.file().file_number,
-                self.base().base_index,
+                self.file().file_number(),
+                self.base().index(),
                 &mut simulation_type,
             )
         })?;
@@ -60,8 +61,8 @@ impl<'s> RwNode<'s> for SimulationType<'s> {
 
         to_cgns_result!(unsafe {
             bindings::cg_simulation_type_write(
-                parent.file().file_number,
-                parent.base_index,
+                parent.file().file_number(),
+                parent.index(),
                 simulation_type,
             )
         })?;

@@ -229,7 +229,7 @@ mod tests {
     }
 
     #[test]
-    fn write_base() {
+    fn read_write_base_and_descriptor() {
         let lib = Library::new();
 
         lib.open("base_test.cgns", CgnsOpenMode::Write)
@@ -249,10 +249,82 @@ mod tests {
 
         let base_index = Base::write(&mut file, &base_data).expect("failed to write base");
 
-        let base = file.get_base(base_index).expect("failed to get base");
+        let mut base = file.get_base(base_index).expect("failed to get base");
 
         let data = base.read().expect("failed to read base");
 
         assert_eq!(data, base_data);
+
+        let descriptor_data = DescriptorData {
+            name: "TestDescriptor".into(),
+            value: "Test Value".into(),
+        };
+
+        base.set_descriptor(&descriptor_data)
+            .expect("Failed to write descriptor");
+
+        let descriptor = base
+            .get_descriptor(1)
+            .expect("Failed to read descriptor Node");
+
+        assert_eq!(
+            descriptor.read().expect("Failed to read descriptor"),
+            descriptor_data
+        );
+    }
+
+    #[test]
+    fn read_write_zone_and_descriptor() {
+        let lib = Library::new();
+
+        lib.open("desc_test.cgns", CgnsOpenMode::Write)
+            .expect("Failed to create file")
+            .close()
+            .expect("Failed to close file");
+
+        let mut file = lib
+            .open("desc_test.cgns", CgnsOpenMode::Modify)
+            .expect("Failed to open file");
+
+        let base_data = base::BaseData {
+            name: "New Base".into(),
+            cell_dim: 3,
+            phys_dim: 3,
+        };
+
+        let base_index = Base::write(&mut file, &base_data).expect("failed to write base");
+
+        let mut base = file.get_base(base_index).expect("failed to get base");
+
+        let zone_data = ZoneData {
+            name: "Zone_0001".into(),
+            size: ZoneSize::Structured(StructuredZoneSize {
+                n_cell: (9, 9, 9),
+                n_vertex: (10, 10, 10),
+            }),
+        };
+
+        let zone_index = Zone::write(&mut base, &zone_data).expect("Failed to write Zone");
+
+        let mut zone = Zone::new(&base, zone_index).expect("Failed to read Zone Node");
+
+        assert_eq!(zone.read().expect("Failed to read Zone"), zone_data);
+
+        let descriptor_data = DescriptorData {
+            name: "TestDescriptor".into(),
+            value: "Test Value".into(),
+        };
+
+        zone.set_descriptor(&descriptor_data)
+            .expect("Failed to write descriptor");
+
+        let descriptor = zone
+            .get_descriptor(1)
+            .expect("Failed to read descriptor Node");
+
+        assert_eq!(
+            descriptor.read().expect("Failed to read descriptor"),
+            descriptor_data
+        );
     }
 }

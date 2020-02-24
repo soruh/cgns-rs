@@ -4,6 +4,7 @@ use super::*;
 pub enum CgnsNodeLabel {
     Zone,
     SimulationType,
+    Descriptor,
     Custom(String),
 }
 
@@ -12,6 +13,7 @@ impl CgnsNodeLabel {
         match self {
             CgnsNodeLabel::Zone => "Zone_t",
             CgnsNodeLabel::SimulationType => "SimulationType_t",
+            CgnsNodeLabel::Descriptor => "Descriptor_t",
             CgnsNodeLabel::Custom(inner) => &inner,
         }
     }

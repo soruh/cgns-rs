@@ -11,16 +11,51 @@ where
     descriptor_index: i32,
 }
 
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct DescriptorData {
-    name: String,
-    value: String,
+    pub name: String,
+    pub value: String,
 }
 
 impl<'p, P> Node for Descriptor<'p, P> where P: Node {}
 
-impl<'p, N> ParentNode<'p, N> for N
+// TODO: why do we need this + Sized bound?
+pub trait DescriptorParent<'p>
 where
-    N: GotoTarget + ChildNode<'p> + LeafNode,
+    Self: ParentNode<'p, Descriptor<'p, Self>> + 'p + Sized,
+{
+    fn get_descriptor(&'p self, descriptor_index: i32) -> CgnsResult<Descriptor<'p, Self>> {
+        Descriptor::new(self, descriptor_index)
+    }
+    fn set_descriptor(&mut self, descriptor_data: &DescriptorData) -> CgnsResult<()>
+    where
+        Self: GotoTarget + BaseRefNode,
+    {
+        Descriptor::write(self, descriptor_data)?;
+
+        Ok(())
+    }
+    fn n_descriptors(&self) -> CgnsResult<i32> {
+        self.n_children()
+    }
+}
+
+impl<'p, N> DescriptorParent<'p> for N where N: ParentNode<'p, Descriptor<'p, N>> + 'p {}
+
+impl<'p, P> GotoTarget for Descriptor<'p, P>
+where
+    P: 'p + ParentNode<'p, Descriptor<'p, P>> + GotoTarget,
+{
+    fn path(&self) -> CgnsPath {
+        let mut path = self.parent.path();
+        path.nodes.push((CgnsNodeLabel::Descriptor, self.index()));
+        path
+    }
+}
+
+impl<'p, N> ParentNode<'p, Descriptor<'p, N>> for N
+where
+    N: GotoTarget + ChildNode<'p> + BaseRefNode,
 {
     fn n_children(&self) -> CgnsResult<i32> {
         self.goto()?;
@@ -47,6 +82,11 @@ impl<'p, P> SiblingNode<'p> for Descriptor<'p, P>
 where
     P: 'p + ParentNode<'p, Descriptor<'p, P>>,
 {
+    #[inline]
+    fn index(&self) -> i32 {
+        self.descriptor_index
+    }
+    #[inline]
     fn new_unchecked(parent: &'p Self::Parent, descriptor_index: i32) -> Self {
         Descriptor {
             parent,
@@ -55,10 +95,11 @@ where
     }
 }
 
-impl<'p, P> LeafNode for Descriptor<'p, P>
+impl<'p, P> BaseRefNode for Descriptor<'p, P>
 where
-    P: LeafNode + ParentNode<'p, Self>,
+    P: BaseRefNode + ParentNode<'p, Self>,
 {
+    #[inline]
     fn base<'b>(&'b self) -> &'b Base {
         self.parent().base()
     }
@@ -68,7 +109,7 @@ impl<'p, P> RwNode<'p> for Descriptor<'p, P>
 where
     P: ParentNode<'p, Descriptor<'p, P>>, // TODO: + 'p ?
     Self: ChildNode<'p>,
-    Self::Parent: GotoTarget + LeafNode,
+    Self::Parent: GotoTarget + BaseRefNode,
 {
     type Item = DescriptorData;
     fn read(&self) -> CgnsResult<Self::Item> {
@@ -77,7 +118,7 @@ where
 
         to_cgns_result!(unsafe {
             bindings::cg_descriptor_read(
-                self.descriptor_index,
+                self.index(),
                 name.as_mut_ptr() as *mut c_char,
                 value.as_mut_ptr(),
             )

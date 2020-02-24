@@ -9,21 +9,28 @@ pub struct Zone<'z> {
     zone_index: i32,
 }
 
+// TODO: implement constructor methods that ensure required invariants
+// i.e. n_cell = n_vertex - 1 etc.
+
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct StructuredZoneSize {
     pub n_vertex: (i32, i32, i32),
     pub n_cell: (i32, i32, i32),
 }
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct UnstructuredZoneSize {
     pub n_vertex: (i32, i32, i32),
     pub n_cell: (i32, i32, i32),
     pub b_bound_vertex: (i32, i32, i32),
 }
 
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub enum ZoneSize {
     Structured(StructuredZoneSize),
     Unstructured(UnstructuredZoneSize),
 }
 
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct ZoneData {
     pub name: String,
     pub size: ZoneSize,
@@ -35,9 +42,9 @@ impl<'z> Zone<'z> {
 
         to_cgns_result!(unsafe {
             bindings::cg_index_dim(
-                self.file().file_number,
-                self.base().base_index,
-                self.zone_index,
+                self.file().file_number(),
+                self.base().index(),
+                self.index(),
                 &mut index_dim,
             )
         })?;
@@ -62,8 +69,8 @@ impl<'z> RwNode<'z> for Zone<'z> {
         let mut zone_type: bindings::ZoneType_t = 0;
         to_cgns_result!(unsafe {
             bindings::cg_zone_type(
-                self.file().file_number,
-                self.base().base_index,
+                self.file().file_number(),
+                self.base().index(),
                 self.zone_index,
                 &mut zone_type,
             )
@@ -74,9 +81,9 @@ impl<'z> RwNode<'z> for Zone<'z> {
 
         to_cgns_result!(unsafe {
             bindings::cg_zone_read(
-                self.file().file_number,
-                self.base().base_index,
-                self.zone_index,
+                self.file().file_number(),
+                self.base().index(),
+                self.index(),
                 zonename.as_mut_ptr() as *mut c_char,
                 size_buffer.as_mut_ptr() as *mut i32,
             )
@@ -164,8 +171,8 @@ impl<'z> RwNode<'z> for Zone<'z> {
 
         to_cgns_result!(unsafe {
             bindings::cg_zone_write(
-                parent.file().file_number,
-                parent.base_index,
+                parent.file().file_number(),
+                parent.index(),
                 name.as_ptr(),
                 size.as_ptr(),
                 zone_type,
@@ -185,13 +192,19 @@ impl<'z> ChildNode<'z> for Zone<'z> {
         self.base
     }
 }
-impl<'z> LeafNode for Zone<'z> {
+impl<'z> BaseRefNode for Zone<'z> {
+    #[inline]
     fn base<'b>(&'b self) -> &'b Base {
         self.base
     }
 }
 
 impl<'z> SiblingNode<'z> for Zone<'z> {
+    #[inline]
+    fn index(&self) -> i32 {
+        self.zone_index
+    }
+    #[inline]
     fn new_unchecked(parent: &'z Self::Parent, zone_index: i32) -> Self {
         Zone {
             base: parent,

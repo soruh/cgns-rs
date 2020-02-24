@@ -26,8 +26,8 @@ impl<'b> Iterator for Bases<'b> {
 }
 
 pub struct Base<'b> {
-    pub(crate) base_index: i32,
-    pub(crate) file: &'b File<'b>,
+    base_index: i32,
+    file: &'b File<'b>,
 }
 
 impl<'b> Base<'b> {
@@ -44,7 +44,7 @@ impl<'b> Base<'b> {
         let mut cell_dim = 0;
 
         to_cgns_result!(unsafe {
-            bindings::cg_cell_dim(self.file.file_number, self.base_index, &mut cell_dim)
+            bindings::cg_cell_dim(self.file().file_number(), self.index(), &mut cell_dim)
         })?;
 
         Ok(cell_dim)
@@ -54,7 +54,7 @@ impl<'b> Base<'b> {
         let mut nzones = 0;
 
         to_cgns_result!(unsafe {
-            bindings::cg_nzones(self.file.file_number, self.base_index, &mut nzones)
+            bindings::cg_nzones(self.file().file_number(), self.index(), &mut nzones)
         })?;
 
         Ok(nzones)
@@ -75,10 +75,17 @@ impl<'b> Node for Base<'b> {}
 impl<'b> GotoTarget for Base<'b> {
     fn path(&self) -> CgnsPath {
         CgnsPath {
-            file_number: self.file.file_number,
-            base_index: self.base_index,
+            file_number: self.file().file_number(),
+            base_index: self.index(),
             nodes: vec![],
         }
+    }
+}
+
+impl<'b> BaseRefNode for Base<'b> {
+    #[inline]
+    fn base<'b_>(&'b_ self) -> &'b_ Base {
+        self
     }
 }
 
@@ -93,8 +100,8 @@ impl<'b> RwNode<'b> for Base<'b> {
 
         to_cgns_result!(unsafe {
             bindings::cg_base_read(
-                self.file.file_number,
-                self.base_index,
+                self.file().file_number(),
+                self.index(),
                 basename.as_mut_ptr() as *mut c_char,
                 &mut cell_dim,
                 &mut phys_dim,
@@ -120,7 +127,7 @@ impl<'b> RwNode<'b> for Base<'b> {
 
         to_cgns_result!(unsafe {
             bindings::cg_base_write(
-                parent.file_number,
+                parent.file_number(),
                 basename.as_ptr(),
                 data.cell_dim,
                 data.phys_dim,
@@ -154,6 +161,11 @@ impl<'b> ChildNode<'b> for Base<'b> {
 }
 
 impl<'b> SiblingNode<'b> for Base<'b> {
+    #[inline]
+    fn index(&self) -> i32 {
+        self.base_index
+    }
+    #[inline]
     fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b> {
         Base {
             file: parent,

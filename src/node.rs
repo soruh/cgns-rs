@@ -9,7 +9,7 @@ pub trait GotoTarget {
     #[inline]
     fn goto(&self) -> CgnsResult<()>
     where
-        Self: LeafNode,
+        Self: BaseRefNode,
     {
         self.goto_lib(self.lib())
     }
@@ -28,7 +28,7 @@ where
     // TODO: should we check that there are no such nodes?
     fn delete(self, parent: &mut Self::Parent) -> CgnsResult<()>
     where
-        Self: Sized + GotoTarget + LeafNode,
+        Self: Sized + GotoTarget + BaseRefNode,
         Self::Parent: GotoTarget,
     {
         if let Some((node_label, node_index)) = self.path().nodes.last() {
@@ -56,7 +56,7 @@ where
     fn parent(&self) -> &Self::Parent;
 }
 
-pub trait LeafNode
+pub trait BaseRefNode
 where
     Self: Node,
 {
@@ -64,7 +64,7 @@ where
 
     #[inline]
     fn file<'f>(&'f self) -> &'f File {
-        self.base().file
+        self.base().file()
     }
     #[inline]
     fn lib<'l>(&'l self) -> &'l Library {
@@ -84,6 +84,7 @@ where
     Self: ChildNode<'p>,
     Self::Parent: 'p,
 {
+    fn index(&self) -> i32;
     fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
     fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self>
     where

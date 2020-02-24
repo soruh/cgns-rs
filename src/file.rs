@@ -1,7 +1,7 @@
 use super::*;
 use std::ffi::CString;
 pub struct File<'f> {
-    pub(crate) file_number: i32,
+    file_number: i32,
     pub(crate) lib: &'f Library,
 }
 
@@ -104,6 +104,7 @@ impl<'f> File<'f> {
         Ok(nbases)
     }
 
+    // TODO: abstract into trait
     pub fn bases<'b>(&'b self) -> CgnsResult<Bases<'b>> {
         Ok(Bases {
             current: 1,
