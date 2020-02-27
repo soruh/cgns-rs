@@ -37,7 +37,7 @@ impl<'f, M: OpenMode> File<'f, M> {
         Ok(file_number)
     }
 
-    pub fn open_dynamic<'l>(
+    pub(crate) fn open_dynamic<'l>(
         lib: &'l Library,
         filename: &str,
         mode: CgnsOpenMode,
@@ -49,7 +49,10 @@ impl<'f, M: OpenMode> File<'f, M> {
         })
     }
 
-    pub fn open_read<'l>(lib: &'l Library, filename: &str) -> CgnsResult<File<'l, ReadableFile>> {
+    pub(crate) fn open_read<'l>(
+        lib: &'l Library,
+        filename: &str,
+    ) -> CgnsResult<File<'l, ReadableFile>> {
         Ok(File {
             file_number: Self::open_raw(filename, CgnsOpenMode::Read)?,
             lib,
@@ -57,7 +60,10 @@ impl<'f, M: OpenMode> File<'f, M> {
         })
     }
 
-    pub fn open_write<'l>(lib: &'l Library, filename: &str) -> CgnsResult<File<'l, WriteableFile>> {
+    pub(crate) fn open_write<'l>(
+        lib: &'l Library,
+        filename: &str,
+    ) -> CgnsResult<File<'l, WriteableFile>> {
         Ok(File {
             file_number: Self::open_raw(filename, CgnsOpenMode::Write)?,
             lib,
@@ -65,7 +71,7 @@ impl<'f, M: OpenMode> File<'f, M> {
         })
     }
 
-    pub fn open_modify<'l>(
+    pub(crate) fn open_modify<'l>(
         lib: &'l Library,
         filename: &str,
     ) -> CgnsResult<File<'l, ModifiableFile>> {
@@ -122,10 +128,6 @@ impl<'f, M: OpenMode> File<'f, M> {
         })
     }
 
-    /// Access a base in a CGNS file
-    /// Do not use this in a loop. Instead call `.bases()` to get an iterator over all bases
-    /// NOTE: the `base_index` is not checked for validity
-    // TODO: replace in favour of a generic parent trait
     #[inline]
     pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>>
     where

@@ -16,7 +16,7 @@ pub mod nodes;
 pub mod open_modes;
 pub mod types;
 
-pub use cgio::Cgio;
+pub use cgio::*;
 pub use errors::*;
 pub use file::*;
 pub use node_traits::*;
