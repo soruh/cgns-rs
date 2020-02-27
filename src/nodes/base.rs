@@ -4,20 +4,12 @@ use std::ffi::CStr;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 
-pub struct Base<'b> {
+pub struct Base<'b, M: OpenMode> {
     base_index: i32,
-    file: &'b File<'b>,
+    file: &'b File<'b, M>,
 }
 
-impl<'b> Base<'b> {
-    pub fn file<'f>(&'f self) -> &'f File {
-        self.file
-    }
-
-    pub fn lib<'l>(&'l self) -> &'l Library {
-        self.file().lib
-    }
-
+impl<'b, M: OpenMode> Base<'b, M> {
     /// Get the cell dimension for the CGNS base
     pub fn dim(&self) -> CgnsResult<i32> {
         let mut cell_dim = 0;
@@ -40,7 +32,7 @@ impl<'b> Base<'b> {
     }
 
     #[inline]
-    pub fn get_zone<'z>(&'z self, zone_index: i32) -> CgnsResult<Zone<'z>> {
+    pub fn get_zone<'z>(&'z self, zone_index: i32) -> CgnsResult<Zone<'z, M>> {
         Zone::new(self, zone_index)
     }
 
@@ -49,9 +41,9 @@ impl<'b> Base<'b> {
     }
 }
 
-impl<'b> Node for Base<'b> {}
+impl<'b, M: OpenMode> Node for Base<'b, M> {}
 
-impl<'b> GotoTarget for Base<'b> {
+impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Base;
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
@@ -65,14 +57,23 @@ impl<'b> GotoTarget for Base<'b> {
     }
 }
 
-impl<'b> BaseRefNode for Base<'b> {
+impl<'b, M: OpenMode> BaseRefNode<M> for Base<'b, M> {
+    fn file<'f>(&'f self) -> &'f File<M> {
+        self.file
+    }
+    fn lib<'l>(&'l self) -> &'l Library
+    where
+        M: 'l,
+    {
+        self.file().lib
+    }
     #[inline]
-    fn base<'b_>(&'b_ self) -> &'b_ Base {
+    fn base<'b_>(&'b_ self) -> &'b_ Base<M> {
         self
     }
 }
 
-impl<'b> RwNode<'b> for Base<'b> {
+impl<'b, M: OpenMode> RwNode<'b, M> for Base<'b, M> {
     type Item = BaseData;
 
     /// Read CGNS base information
@@ -122,20 +123,20 @@ impl<'b> RwNode<'b> for Base<'b> {
     }
 }
 
-impl<'b> ParentNode<'b, Zone<'b>> for Base<'b> {
+impl<'b, M: OpenMode> ParentNode<'b, M, Zone<'b, M>> for Base<'b, M> {
     fn n_children(&self) -> CgnsResult<i32> {
         self.n_zones()
     }
 }
 
-impl<'b> ParentNode<'b, SimulationType<'b>> for Base<'b> {
+impl<'b, M: OpenMode> ParentNode<'b, M, SimulationType<'b, M>> for Base<'b, M> {
     fn n_children(&self) -> CgnsResult<i32> {
         Ok(1) // TODO
     }
 }
 
-impl<'b> ChildNode<'b> for Base<'b> {
-    type Parent = File<'b>;
+impl<'b, M: OpenMode> ChildNode<'b, M> for Base<'b, M> {
+    type Parent = File<'b, M>;
 
     #[inline]
     fn parent(&self) -> &Self::Parent {
@@ -143,16 +144,16 @@ impl<'b> ChildNode<'b> for Base<'b> {
     }
 }
 
-impl<'b> IndexableNode for Base<'b> {
+impl<'b, M: OpenMode> IndexableNode for Base<'b, M> {
     #[inline]
     fn index(&self) -> i32 {
         self.base_index
     }
 }
 
-impl<'b> SiblingNode<'b> for Base<'b> {
+impl<'b, M: OpenMode> SiblingNode<'b, M> for Base<'b, M> {
     #[inline]
-    fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b> {
+    fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b, M> {
         Base {
             file: parent,
             base_index,

@@ -13,6 +13,7 @@ pub mod cgio;
 pub mod file;
 pub mod node;
 pub mod nodes;
+pub mod open_modes;
 pub mod types;
 
 pub use cgio::Cgio;
@@ -20,6 +21,7 @@ pub use errors::*;
 pub use file::*;
 pub use node::*;
 pub use nodes::*;
+pub use open_modes::*;
 pub use types::*;
 
 use std::ffi::CString;
@@ -52,8 +54,24 @@ impl Library {
     }
 
     #[inline]
-    pub fn open<'l>(&'l self, filename: &str, mode: CgnsOpenMode) -> CgnsResult<File<'l>> {
-        File::open(self, filename, mode)
+    pub fn open_dynamic<'l>(
+        &'l self,
+        filename: &str,
+        mode: CgnsOpenMode,
+    ) -> CgnsResult<File<'l, UnknownFile>> {
+        File::<ModifiableFile>::open_dynamic(self, filename, mode)
+    }
+
+    pub fn open_read<'l>(&'l self, filename: &str) -> CgnsResult<File<'l, ReadableFile>> {
+        File::<ReadableFile>::open_read(self, filename)
+    }
+
+    pub fn open_write<'l>(&'l self, filename: &str) -> CgnsResult<File<'l, WriteableFile>> {
+        File::<WriteableFile>::open_write(self, filename)
+    }
+
+    pub fn open_modify<'l>(&'l self, filename: &str) -> CgnsResult<File<'l, ModifiableFile>> {
+        File::<ModifiableFile>::open_modify(self, filename)
     }
 
     pub fn goto(&self, path: &CgnsPath) -> CgnsResult<()> {

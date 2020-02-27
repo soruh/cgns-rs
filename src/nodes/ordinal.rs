@@ -1,18 +1,21 @@
 use super::*;
-pub struct Ordinal<'p, P>
+use std::marker::PhantomData;
+
+pub struct Ordinal<'p, M: OpenMode + 'p, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     parent: &'p P,
+    _phantom: PhantomData<M>,
 }
 
 pub struct OrdinalData(pub i32);
 
-impl<'p, P> Node for Ordinal<'p, P> where P: ParentNode<'p, Self> {}
+impl<'p, M: OpenMode, P> Node for Ordinal<'p, M, P> where P: ParentNode<'p, M, Self> {}
 
-impl<'p, P> ChildNode<'p> for Ordinal<'p, P>
+impl<'p, M: OpenMode, P> ChildNode<'p, M> for Ordinal<'p, M, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     type Parent = P;
     fn parent(&self) -> &Self::Parent {
@@ -20,30 +23,33 @@ where
     }
 }
 
-impl<'p, N> ParentNode<'p, Ordinal<'p, Self>> for N
+impl<'p, N, M: OpenMode> ParentNode<'p, M, Ordinal<'p, M, Self>> for N
 where
-    N: Node + GotoTarget + BaseRefNode,
+    N: Node + GotoTarget<M> + BaseRefNode<M>,
 {
     fn n_children(&self) -> CgnsResult<i32>
     where
-        Ordinal<'p, Self>: SiblingNode<'p>,
+        Ordinal<'p, M, Self>: SiblingNode<'p, M>,
     {
         unreachable!()
     }
 }
 
-impl<'p, P> OnlyChildNode<'p> for Ordinal<'p, P>
+impl<'p, M: OpenMode, P> OnlyChildNode<'p, M> for Ordinal<'p, M, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     fn new(parent: &'p Self::Parent) -> Self {
-        Self { parent }
+        Self {
+            parent,
+            _phantom: Default::default(),
+        }
     }
 }
 
-impl<'p, P> RwNode<'p> for Ordinal<'p, P>
+impl<'p, M: OpenMode, P> RwNode<'p, M> for Ordinal<'p, M, P>
 where
-    P: ParentNode<'p, Self> + GotoTarget + BaseRefNode,
+    P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
 {
     type Item = OrdinalData;
     fn read(&self) -> CgnsResult<Self::Item> {
@@ -58,9 +64,9 @@ where
     }
 }
 
-impl<'p, P> GotoTarget for Ordinal<'p, P>
+impl<'p, M: OpenMode, P> GotoTarget<M> for Ordinal<'p, M, P>
 where
-    P: ParentNode<'p, Self> + GotoTarget + BaseRefNode,
+    P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
 {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Ordinal;
     fn path(&self) -> CgnsPath {
@@ -70,12 +76,12 @@ where
     }
 }
 
-impl<'p, P> BaseRefNode for Ordinal<'p, P>
+impl<'p, M: OpenMode, P> BaseRefNode<M> for Ordinal<'p, M, P>
 where
-    P: BaseRefNode + GotoTarget,
+    P: BaseRefNode<M> + GotoTarget<M>,
 {
     #[inline]
-    fn base<'b>(&'b self) -> &'b Base {
+    fn base<'b>(&'b self) -> &'b Base<M> {
         self.parent().base()
     }
 }

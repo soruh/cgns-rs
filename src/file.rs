@@ -1,17 +1,20 @@
 use super::*;
 use std::ffi::CString;
-pub struct File<'f> {
+use std::marker::PhantomData;
+
+pub struct File<'f, M: OpenMode> {
     file_number: i32,
     pub(crate) lib: &'f Library,
+    _phantom: PhantomData<*const M>,
 }
 
-impl<'f> std::fmt::Debug for File<'f> {
+impl<'f, M: OpenMode> std::fmt::Debug for File<'f, M> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         write!(f, "File[{}]", self.file_number)
     }
 }
 
-impl<'f> File<'f> {
+impl<'f, M: OpenMode> File<'f, M> {
     fn close_by_ref(&mut self) -> CgnsResult<()> {
         to_cgns_result(unsafe { cgns_bindings::cg_close(self.file_number) })
     }
@@ -23,11 +26,7 @@ impl<'f> File<'f> {
         Ok(())
     }
 
-    pub(crate) fn open<'l>(
-        lib: &'l Library,
-        filename: &str,
-        mode: CgnsOpenMode,
-    ) -> CgnsResult<File<'l>> {
+    pub(crate) fn open_raw(filename: &str, mode: CgnsOpenMode) -> CgnsResult<i32> {
         let filename = CString::new(filename)?;
         let mut file_number = 0;
 
@@ -35,7 +34,46 @@ impl<'f> File<'f> {
             cgns_bindings::cg_open(filename.as_ptr(), mode as i32, &mut file_number)
         })?;
 
-        Ok(File { file_number, lib })
+        Ok(file_number)
+    }
+
+    pub fn open_dynamic<'l>(
+        lib: &'l Library,
+        filename: &str,
+        mode: CgnsOpenMode,
+    ) -> CgnsResult<File<'l, UnknownFile>> {
+        Ok(File {
+            file_number: Self::open_raw(filename, mode)?,
+            lib,
+            _phantom: Default::default(),
+        })
+    }
+
+    pub fn open_read<'l>(lib: &'l Library, filename: &str) -> CgnsResult<File<'l, ReadableFile>> {
+        Ok(File {
+            file_number: Self::open_raw(filename, CgnsOpenMode::Read)?,
+            lib,
+            _phantom: Default::default(),
+        })
+    }
+
+    pub fn open_write<'l>(lib: &'l Library, filename: &str) -> CgnsResult<File<'l, WriteableFile>> {
+        Ok(File {
+            file_number: Self::open_raw(filename, CgnsOpenMode::Write)?,
+            lib,
+            _phantom: Default::default(),
+        })
+    }
+
+    pub fn open_modify<'l>(
+        lib: &'l Library,
+        filename: &str,
+    ) -> CgnsResult<File<'l, ModifiableFile>> {
+        Ok(File {
+            file_number: Self::open_raw(filename, CgnsOpenMode::Modify)?,
+            lib,
+            _phantom: Default::default(),
+        })
     }
 
     /// exposes the cgns_bindings internal file_number (`fn`) of this file
@@ -62,7 +100,7 @@ impl<'f> File<'f> {
     }
 
     #[inline]
-    pub fn cgio<'s>(&'s self) -> CgnsResult<Cgio<'s>> {
+    pub fn cgio<'s>(&'s self) -> CgnsResult<Cgio<'s, M>> {
         Cgio::from_file(self)
     }
 
@@ -87,30 +125,30 @@ impl<'f> File<'f> {
     /// Access a base in a CGNS file
     /// Do not use this in a loop. Instead call `.bases()` to get an iterator over all bases
     /// NOTE: the `base_index` is not checked for validity
-    // TODO: check base_index for validity
+    // TODO: replace in favour of a generic parent trait
     #[inline]
-    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b>> {
+    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>> {
         Base::new(self, base_index)
     }
 }
 
-impl<'f> Drop for File<'f> {
+impl<'f, M: OpenMode> Drop for File<'f, M> {
     fn drop(&mut self) {
         self.close_by_ref()
             .expect(&format!("Failed to close {:?}", self))
     }
 }
 
-impl<'f> Node for File<'f> {}
+impl<'f, M: OpenMode> Node for File<'f, M> {}
 
-impl<'f> IndexableNode for File<'f> {
+impl<'f, M: OpenMode> IndexableNode for File<'f, M> {
     #[inline]
     fn index(&self) -> i32 {
         self.file_number
     }
 }
 
-impl<'f> ParentNode<'f, Base<'f>> for File<'f> {
+impl<'f, M: OpenMode> ParentNode<'f, M, Base<'f, M>> for File<'f, M> {
     fn n_children(&self) -> CgnsResult<i32> {
         let mut nbases = 0;
         to_cgns_result(unsafe { cgns_bindings::cg_nbases(self.file_number, &mut nbases) })?;

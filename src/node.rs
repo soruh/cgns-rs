@@ -1,6 +1,6 @@
 use super::*;
 
-pub trait GotoTarget: Node {
+pub trait GotoTarget<M: OpenMode>: Node {
     const NODE_LABEL: CgnsNodeLabel;
     /// Note: This `must` be overwritten on SiblingNodes
     fn name(&self) -> CgnsResult<String> {
@@ -14,13 +14,13 @@ pub trait GotoTarget: Node {
     #[inline]
     fn goto(&self) -> CgnsResult<()>
     where
-        Self: BaseRefNode,
+        Self: BaseRefNode<M>,
     {
         self.goto_lib(self.lib())
     }
 }
 
-pub trait RwNode<'n>: ChildNode<'n> {
+pub trait RwNode<'n, M: OpenMode + 'n>: ChildNode<'n, M> {
     type Item;
 
     fn read(&self) -> CgnsResult<Self::Item>;
@@ -30,8 +30,8 @@ pub trait RwNode<'n>: ChildNode<'n> {
     // TODO: should we check that there are no such nodes?
     fn delete(self, parent: &mut Self::Parent) -> CgnsResult<()>
     where
-        Self: Sized + GotoTarget,
-        Self::Parent: GotoTarget + BaseRefNode,
+        Self: Sized + GotoTarget<M>,
+        Self::Parent: GotoTarget<M> + BaseRefNode<M>,
     {
         let lib = parent.lib();
         parent.goto_lib(&lib)?;
@@ -39,29 +39,32 @@ pub trait RwNode<'n>: ChildNode<'n> {
     }
 }
 
-pub trait ChildNode<'p>: Node + 'p + Sized
+pub trait ChildNode<'p, M: OpenMode + 'p>: Node + 'p + Sized
 // TODO: Why do we need this + Sized bound?
 where
-    Self::Parent: ParentNode<'p, Self>,
+    Self::Parent: ParentNode<'p, M, Self>,
 {
     type Parent;
     fn parent(&self) -> &Self::Parent;
 }
 
-pub trait BaseRefNode: Node {
-    fn base<'b>(&'b self) -> &'b Base;
+pub trait BaseRefNode<M: OpenMode>: Node {
+    fn base<'b>(&'b self) -> &'b Base<M>;
 
     #[inline]
-    fn file<'f>(&'f self) -> &'f File {
+    fn file<'f>(&'f self) -> &'f File<M> {
         self.base().file()
     }
     #[inline]
-    fn lib<'l>(&'l self) -> &'l Library {
+    fn lib<'l>(&'l self) -> &'l Library
+    where
+        M: 'l,
+    {
         self.file().lib
     }
 }
 
-pub trait OnlyChildNode<'p>: ChildNode<'p> {
+pub trait OnlyChildNode<'p, M: OpenMode + 'p>: ChildNode<'p, M> {
     fn new(parent: &'p Self::Parent) -> Self;
 }
 
@@ -69,18 +72,18 @@ pub trait IndexableNode: Node {
     fn index(&self) -> i32;
 }
 
-pub struct NodeIter<'p, S>
+pub struct NodeIter<'p, M: OpenMode, S>
 where
-    S: SiblingNode<'p>,
+    S: SiblingNode<'p, M>,
 {
     n_items: i32,
     current: i32,
     parent: &'p S::Parent,
 }
 
-impl<'p, S> Iterator for NodeIter<'p, S>
+impl<'p, M: OpenMode + 'p, S> Iterator for NodeIter<'p, M, S>
 where
-    S: SiblingNode<'p>,
+    S: SiblingNode<'p, M>,
 {
     type Item = S;
     fn next(&mut self) -> Option<Self::Item> {
@@ -94,8 +97,8 @@ where
     }
 }
 
-pub trait IterableNode<'p>: SiblingNode<'p> {
-    fn iter(parent: &'p Self::Parent) -> CgnsResult<NodeIter<'p, Self>> {
+pub trait IterableNode<'p, M: OpenMode + 'p>: SiblingNode<'p, M> {
+    fn iter(parent: &'p Self::Parent) -> CgnsResult<NodeIter<'p, M, Self>> {
         Ok(NodeIter {
             current: 0,
             n_items: parent.n_children()?,
@@ -104,9 +107,9 @@ pub trait IterableNode<'p>: SiblingNode<'p> {
     }
 }
 
-impl<'p, N> IterableNode<'p> for N where N: SiblingNode<'p> {}
+impl<'p, M: OpenMode + 'p, N> IterableNode<'p, M> for N where N: SiblingNode<'p, M> {}
 
-pub trait SiblingNode<'p>: ChildNode<'p> + IndexableNode {
+pub trait SiblingNode<'p, M: OpenMode + 'p>: ChildNode<'p, M> + IndexableNode {
     fn new_unchecked(parent: &'p Self::Parent, index: i32) -> Self;
     fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self>
     where
@@ -120,13 +123,13 @@ pub trait SiblingNode<'p>: ChildNode<'p> + IndexableNode {
     }
 }
 
-pub trait ParentNode<'p, C>: Node
+pub trait ParentNode<'p, M: OpenMode + 'p, C>: Node
 where
-    C: ChildNode<'p> + 'p,
+    C: ChildNode<'p, M> + 'p,
 {
     fn n_children(&self) -> CgnsResult<i32>
     where
-        C: SiblingNode<'p>;
+        C: SiblingNode<'p, M>;
 }
 
 pub trait Node {}

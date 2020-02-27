@@ -1,7 +1,7 @@
 use cgns::*;
 
 fn create_file(lib: &Library, path: &str) -> CgnsResult<()> {
-    let file = lib.open(path, CgnsOpenMode::Write)?;
+    let file = lib.open_write(path)?;
     file.close()?;
     Ok(())
 }
@@ -35,9 +35,7 @@ fn lib_two_instances_parralel() {
 fn open_file() {
     let lib = Library::new();
 
-    let file = lib
-        .open("test.cgns", CgnsOpenMode::Write)
-        .expect("Failed to open file");
+    let file = lib.open_write("test.cgns").expect("Failed to open file");
 
     file.close().expect("Failed to close file");
 }
@@ -46,9 +44,7 @@ fn open_file() {
 fn get_cgio() {
     let lib = Library::new();
 
-    let file = lib
-        .open("test.cgns", CgnsOpenMode::Write)
-        .expect("Failed to open file");
+    let file = lib.open_write("test.cgns").expect("Failed to open file");
 
     let cgio = file.cgio().expect("Failed to get cgio");
 
@@ -63,7 +59,7 @@ fn test_goto() {
     create_file(&lib, "goto_test.cgns").expect("Failed to create file");
 
     let mut file = lib
-        .open("goto_test.cgns", CgnsOpenMode::Modify)
+        .open_modify("goto_test.cgns")
         .expect("failed to open file");
 
     let base_index = Base::write(
@@ -93,7 +89,7 @@ fn iter_bases() {
     create_file(&lib, "iter_test.cgns").expect("Failed to create file");
 
     let mut file = lib
-        .open("iter_test.cgns", CgnsOpenMode::Modify)
+        .open_modify("iter_test.cgns")
         .expect("failed to open file");
 
     assert_eq!(
@@ -149,7 +145,7 @@ fn read_write_base_and_descriptor() {
     create_file(&lib, "base_test.cgns").expect("Failed to create file");
 
     let mut file = lib
-        .open("base_test.cgns", CgnsOpenMode::Modify)
+        .open_modify("base_test.cgns")
         .expect("Failed to open file");
 
     let base_data = base::BaseData {
@@ -191,7 +187,7 @@ fn read_write_zone_and_descriptor() {
     create_file(&lib, "desc_test.cgns").expect("Failed to create file");
 
     let mut file = lib
-        .open("desc_test.cgns", CgnsOpenMode::Modify)
+        .open_modify("desc_test.cgns")
         .expect("Failed to open file");
 
     let base_data = base::BaseData {

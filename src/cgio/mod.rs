@@ -5,14 +5,14 @@ pub use types::*;
 
 use std::marker::PhantomData;
 
-pub struct Cgio<'g> {
+pub struct Cgio<'g, M> {
     cgio_number: i32,
     root_node: CgioNode,
-    _phantom: PhantomData<&'g ()>,
+    _phantom: PhantomData<&'g M>,
 }
 
-impl<'g> Cgio<'g> {
-    pub(crate) fn from_file<'f>(file: &File<'f>) -> CgnsResult<Cgio<'f>> {
+impl<'g, M: OpenMode> Cgio<'g, M> {
+    pub(crate) fn from_file<'f>(file: &File<'f, M>) -> CgnsResult<Cgio<'f, M>> {
         let cgio_number = file.get_cgio_number()?;
         let root_id = file.root_id()?;
 

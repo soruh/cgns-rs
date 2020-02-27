@@ -4,8 +4,8 @@ use std::{
     mem::MaybeUninit,
     os::raw::c_char,
 };
-pub struct Zone<'z> {
-    base: &'z Base<'z>,
+pub struct Zone<'z, M: OpenMode> {
+    base: &'z Base<'z, M>,
     zone_index: i32,
 }
 
@@ -36,7 +36,7 @@ pub struct ZoneData {
     pub size: ZoneSize,
 }
 
-impl<'z> Zone<'z> {
+impl<'z, M: OpenMode> Zone<'z, M> {
     pub fn index_dim(&self) -> CgnsResult<i32> {
         let mut index_dim = 0;
 
@@ -53,9 +53,9 @@ impl<'z> Zone<'z> {
     }
 }
 
-impl<'z> Node for Zone<'z> {}
+impl<'z, M: OpenMode> Node for Zone<'z, M> {}
 
-impl<'z> GotoTarget for Zone<'z> {
+impl<'z, M: OpenMode> GotoTarget<M> for Zone<'z, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Zone;
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
@@ -68,7 +68,7 @@ impl<'z> GotoTarget for Zone<'z> {
     }
 }
 
-impl<'z> RwNode<'z> for Zone<'z> {
+impl<'z, M: OpenMode> RwNode<'z, M> for Zone<'z, M> {
     type Item = ZoneData;
     fn read(&self) -> CgnsResult<Self::Item> {
         let mut zone_type: cgns_bindings::ZoneType_t = 0;
@@ -189,29 +189,29 @@ impl<'z> RwNode<'z> for Zone<'z> {
     }
 }
 
-impl<'z> ChildNode<'z> for Zone<'z> {
-    type Parent = Base<'z>;
+impl<'z, M: OpenMode> ChildNode<'z, M> for Zone<'z, M> {
+    type Parent = Base<'z, M>;
 
     #[inline]
     fn parent(&self) -> &Self::Parent {
         self.base
     }
 }
-impl<'z> BaseRefNode for Zone<'z> {
+impl<'z, M: OpenMode> BaseRefNode<M> for Zone<'z, M> {
     #[inline]
-    fn base<'b>(&'b self) -> &'b Base {
+    fn base<'b>(&'b self) -> &'b Base<M> {
         self.base
     }
 }
 
-impl<'z> IndexableNode for Zone<'z> {
+impl<'z, M: OpenMode> IndexableNode for Zone<'z, M> {
     #[inline]
     fn index(&self) -> i32 {
         self.zone_index
     }
 }
 
-impl<'z> SiblingNode<'z> for Zone<'z> {
+impl<'z, M: OpenMode> SiblingNode<'z, M> for Zone<'z, M> {
     #[inline]
     fn new_unchecked(parent: &'z Self::Parent, zone_index: i32) -> Self {
         Zone {
@@ -221,9 +221,9 @@ impl<'z> SiblingNode<'z> for Zone<'z> {
     }
 }
 
-// impl<'z> IterableNode<'z> for Zone<'z> {}
+// impl<'z, M: OpenMode> IterableNode<'z> for Zone<'z, M> {}
 
 // TODO
-// impl<'z> ParentNode<'z> for Zone<'z> {
+// impl<'z, M: OpenMode> ParentNode<'z> for Zone<'z, M> {
 //     fn n_children(&self, child_kind: Self::Children) -> CgnsResult<i32> {}
 // }

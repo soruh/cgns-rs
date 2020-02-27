@@ -1,14 +1,16 @@
 use super::*;
 use std::ffi::{CStr, CString};
+use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::os::raw::{c_char, c_void};
 
-pub struct Descriptor<'p, P>
+pub struct Descriptor<'p, M: OpenMode + 'p, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     parent: &'p P,
     descriptor_index: i32,
+    _phantom: PhantomData<M>,
 }
 
 #[derive(Eq, PartialEq, Clone, Debug)]
@@ -17,11 +19,11 @@ pub struct DescriptorData {
     pub value: String,
 }
 
-impl<'p, P> Node for Descriptor<'p, P> where P: ParentNode<'p, Self> {}
+impl<'p, P, M: OpenMode> Node for Descriptor<'p, M, P> where P: ParentNode<'p, M, Self> {}
 
-impl<'p, P> ChildNode<'p> for Descriptor<'p, P>
+impl<'p, P, M: OpenMode> ChildNode<'p, M> for Descriptor<'p, M, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     type Parent = P;
     fn parent(&self) -> &Self::Parent {
@@ -29,9 +31,9 @@ where
     }
 }
 
-impl<'p, N> ParentNode<'p, Descriptor<'p, Self>> for N
+impl<'p, N, M: OpenMode> ParentNode<'p, M, Descriptor<'p, M, Self>> for N
 where
-    N: Node + GotoTarget + BaseRefNode,
+    N: Node + GotoTarget<M> + BaseRefNode<M>,
 {
     fn n_children(&self) -> CgnsResult<i32> {
         self.goto()?;
@@ -44,9 +46,9 @@ where
     }
 }
 
-impl<'p, P> GotoTarget for Descriptor<'p, P>
+impl<'p, P, M: OpenMode> GotoTarget<M> for Descriptor<'p, M, P>
 where
-    P: ParentNode<'p, Self> + GotoTarget + BaseRefNode,
+    P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
 {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Descriptor;
     fn name(&self) -> CgnsResult<String> {
@@ -59,9 +61,9 @@ where
     }
 }
 
-impl<'p, P> IndexableNode for Descriptor<'p, P>
+impl<'p, P, M: OpenMode> IndexableNode for Descriptor<'p, M, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     #[inline]
     fn index(&self) -> i32 {
@@ -69,22 +71,23 @@ where
     }
 }
 
-impl<'p, P> SiblingNode<'p> for Descriptor<'p, P>
+impl<'p, P, M: OpenMode> SiblingNode<'p, M> for Descriptor<'p, M, P>
 where
-    P: ParentNode<'p, Self>,
+    P: ParentNode<'p, M, Self>,
 {
     #[inline]
     fn new_unchecked(parent: &'p Self::Parent, descriptor_index: i32) -> Self {
         Descriptor {
             parent,
             descriptor_index,
+            _phantom: Default::default(),
         }
     }
 }
 
-impl<'p, P> RwNode<'p> for Descriptor<'p, P>
+impl<'p, P, M: OpenMode> RwNode<'p, M> for Descriptor<'p, M, P>
 where
-    P: ParentNode<'p, Self> + GotoTarget + BaseRefNode,
+    P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
 {
     type Item = DescriptorData;
     fn read(&self) -> CgnsResult<Self::Item> {
@@ -126,12 +129,12 @@ where
     }
 }
 
-impl<'p, P> BaseRefNode for Descriptor<'p, P>
+impl<'p, P, M: OpenMode> BaseRefNode<M> for Descriptor<'p, M, P>
 where
-    P: BaseRefNode + GotoTarget,
+    P: BaseRefNode<M> + GotoTarget<M>,
 {
     #[inline]
-    fn base<'b>(&'b self) -> &'b Base {
+    fn base<'b>(&'b self) -> &'b Base<M> {
         self.parent().base()
     }
 }
@@ -139,10 +142,11 @@ where
 // impl<'p, P> IterableNode<'p> for Descriptor<'p, P> where P: BaseRefNode + GotoTarget {}
 
 // TODO: why do we need this + Sized bound?
-pub trait DescriptorParent<'p>:
-    ParentNode<'p, Descriptor<'p, Self>> + 'p + Sized + GotoTarget + BaseRefNode
+// TODO: make this trait generic
+pub trait DescriptorParent<'p, M: OpenMode + 'p>:
+    ParentNode<'p, M, Descriptor<'p, M, Self>> + 'p + Sized + GotoTarget<M> + BaseRefNode<M>
 {
-    fn get_descriptor(&'p self, descriptor_index: i32) -> CgnsResult<Descriptor<'p, Self>> {
+    fn get_descriptor(&'p self, descriptor_index: i32) -> CgnsResult<Descriptor<'p, M, Self>> {
         Descriptor::new(self, descriptor_index)
     }
     fn set_descriptor(&mut self, descriptor_data: &DescriptorData) -> CgnsResult<()> {
@@ -155,7 +159,7 @@ pub trait DescriptorParent<'p>:
     }
 }
 
-impl<'p, N> DescriptorParent<'p> for N where
-    N: ParentNode<'p, Descriptor<'p, N>> + 'p + GotoTarget + BaseRefNode
+impl<'p, M: OpenMode + 'p, N> DescriptorParent<'p, M> for N where
+    N: ParentNode<'p, M, Descriptor<'p, M, N>> + 'p + GotoTarget<M> + BaseRefNode<M>
 {
 }
