@@ -16,7 +16,8 @@ impl OpenModeWrite for ModifiableFile {}
 impl OpenModeRead for ModifiableFile {}
 
 // NOTE: has the same permissions as `ModifiableFile` but signifies that
-// The file mode is not modify but has been dynamically selected
+// The file is not open for modification but that it's
+// open mode has been dynamically selected
 pub struct UnknownFile {}
 impl OpenMode for UnknownFile {}
 impl OpenModeWrite for UnknownFile {}

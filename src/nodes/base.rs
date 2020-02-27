@@ -43,11 +43,17 @@ impl<'b, M: OpenMode> Base<'b, M> {
 
 impl<'b, M: OpenMode> Node for Base<'b, M> {}
 
-impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
+impl<'b, M: OpenMode> LabeledNode for Base<'b, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Base;
+}
+
+impl<'b, M: OpenModeRead> NamedNode<M> for Base<'b, M> {
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
     }
+}
+
+impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
     fn path(&self) -> CgnsPath {
         CgnsPath {
             file_number: self.file().file_number(),

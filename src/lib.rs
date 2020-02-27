@@ -11,7 +11,7 @@ pub use libcgns_sys::{cgio as cgio_bindings, cgns as cgns_bindings};
 pub mod errors;
 pub mod cgio;
 pub mod file;
-pub mod node;
+pub mod node_traits;
 pub mod nodes;
 pub mod open_modes;
 pub mod types;
@@ -19,7 +19,7 @@ pub mod types;
 pub use cgio::Cgio;
 pub use errors::*;
 pub use file::*;
-pub use node::*;
+pub use node_traits::*;
 pub use nodes::*;
 pub use open_modes::*;
 pub use types::*;
@@ -104,7 +104,7 @@ impl Library {
         })
     }
 
-    pub fn delete_node(&self, node_name: String) -> CgnsResult<()> {
+    pub(crate) fn delete_node(&self, node_name: String) -> CgnsResult<()> {
         let node_name = CString::new(node_name)?;
         to_cgns_result(unsafe { cgns_bindings::cg_delete_node(node_name.as_ptr()) })
     }
@@ -158,10 +158,9 @@ impl Library {
 
 impl Drop for Library {
     fn drop(&mut self) {
-        assert!(
-            LIB_IN_USE.compare_and_swap(true, false, Ordering::Release),
-            "Singleton was instanciated twice"
-        );
+        if !LIB_IN_USE.compare_and_swap(true, false, Ordering::Release) {
+            unreachable!("Singleton was instanciated twice");
+        }
     }
 }
 

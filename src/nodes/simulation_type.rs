@@ -13,8 +13,11 @@ pub struct SimulationType<'s, M: OpenMode> {
 
 impl<'s, M: OpenMode> Node for SimulationType<'s, M> {}
 
-impl<'s, M: OpenMode> GotoTarget<M> for SimulationType<'s, M> {
+impl<'s, M: OpenMode> LabeledNode for SimulationType<'s, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::SimulationType;
+}
+
+impl<'s, M: OpenMode> GotoTarget<M> for SimulationType<'s, M> {
     fn path(&self) -> CgnsPath {
         let mut path = self.parent().path();
         path.nodes.push((Self::NODE_LABEL, 0));

@@ -46,14 +46,27 @@ where
     }
 }
 
+impl<'p, M: OpenMode, P> LabeledNode for Descriptor<'p, M, P>
+where
+    P: BaseRefNode<M> + GotoTarget<M>,
+{
+    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Descriptor;
+}
+
+impl<'p, M: OpenMode, P> NamedNode<M> for Descriptor<'p, M, P>
+where
+    P: BaseRefNode<M> + GotoTarget<M>,
+    M: OpenModeRead,
+{
+    fn name(&self) -> CgnsResult<String> {
+        Ok(String::from(&self.read()?.name))
+    }
+}
+
 impl<'p, P, M: OpenMode> GotoTarget<M> for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
 {
-    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Descriptor;
-    fn name(&self) -> CgnsResult<String> {
-        Ok(String::from(&self.read()?.name))
-    }
     fn path(&self) -> CgnsPath {
         let mut path = self.parent.path();
         path.nodes.push((CgnsNodeLabel::Descriptor, self.index()));
@@ -146,10 +159,16 @@ where
 pub trait DescriptorParent<'p, M: OpenMode + 'p>:
     ParentNode<'p, M, Descriptor<'p, M, Self>> + 'p + Sized + GotoTarget<M> + BaseRefNode<M>
 {
-    fn get_descriptor(&'p self, descriptor_index: i32) -> CgnsResult<Descriptor<'p, M, Self>> {
-        Descriptor::new(self, descriptor_index)
+    fn get_descriptor(&'p self, descriptor_index: i32) -> CgnsResult<DescriptorData>
+    where
+        M: OpenModeRead,
+    {
+        Descriptor::new(self, descriptor_index)?.read()
     }
-    fn set_descriptor(&mut self, descriptor_data: &DescriptorData) -> CgnsResult<()> {
+    fn set_descriptor(&mut self, descriptor_data: &DescriptorData) -> CgnsResult<()>
+    where
+        M: OpenModeWrite,
+    {
         Descriptor::write(self, descriptor_data)?;
 
         Ok(())

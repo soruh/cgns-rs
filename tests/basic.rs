@@ -174,10 +174,7 @@ fn read_write_base_and_descriptor() {
         .get_descriptor(1)
         .expect("Failed to read descriptor Node");
 
-    assert_eq!(
-        descriptor.read().expect("Failed to read descriptor"),
-        descriptor_data
-    );
+    assert_eq!(descriptor, descriptor_data);
 }
 
 #[test]
@@ -226,8 +223,5 @@ fn read_write_zone_and_descriptor() {
         .get_descriptor(1)
         .expect("Failed to read descriptor Node");
 
-    assert_eq!(
-        descriptor.read().expect("Failed to read descriptor"),
-        descriptor_data
-    );
+    assert_eq!(descriptor, descriptor_data);
 }

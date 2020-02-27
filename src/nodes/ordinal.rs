@@ -64,11 +64,14 @@ where
     }
 }
 
+impl<'p, P: BaseRefNode<M> + GotoTarget<M>, M: OpenMode> LabeledNode for Ordinal<'p, M, P> {
+    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Ordinal;
+}
+
 impl<'p, M: OpenMode, P> GotoTarget<M> for Ordinal<'p, M, P>
 where
     P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
 {
-    const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Ordinal;
     fn path(&self) -> CgnsPath {
         let mut path = self.parent.path();
         path.nodes.push((CgnsNodeLabel::Descriptor, 0));

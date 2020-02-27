@@ -55,12 +55,20 @@ impl<'z, M: OpenMode> Zone<'z, M> {
 
 impl<'z, M: OpenMode> Node for Zone<'z, M> {}
 
-impl<'z, M: OpenMode> GotoTarget<M> for Zone<'z, M> {
+impl<'z, M: OpenMode> LabeledNode for Zone<'z, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Zone;
+}
+
+impl<'z, M: OpenMode> NamedNode<M> for Zone<'z, M>
+where
+    M: OpenModeRead,
+{
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
     }
+}
 
+impl<'z, M: OpenMode> GotoTarget<M> for Zone<'z, M> {
     fn path(&self) -> CgnsPath {
         let mut path = self.base.path();
         path.nodes.push((CgnsNodeLabel::Zone, self.zone_index));
