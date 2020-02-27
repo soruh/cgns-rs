@@ -89,3 +89,9 @@ impl<'s, M: OpenMode> OnlyChildNode<'s, M> for SimulationType<'s, M> {
         SimulationType { base: parent }
     }
 }
+
+impl<'b, M: OpenMode> ParentNode<'b, M, SimulationType<'b, M>> for Base<'b, M> {
+    fn n_children(&self) -> CgnsResult<i32> {
+        unreachable!()
+    }
+}

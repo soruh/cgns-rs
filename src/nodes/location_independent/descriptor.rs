@@ -104,6 +104,8 @@ where
 {
     type Item = DescriptorData;
     fn read(&self) -> CgnsResult<Self::Item> {
+        self.parent().goto()?;
+
         let mut name = [MaybeUninit::<c_char>::uninit(); 33];
         let mut value = MaybeUninit::<*mut c_char>::uninit();
 
@@ -129,6 +131,8 @@ where
         Ok(descriptor_data)
     }
     fn write(parent: &mut Self::Parent, data: &Self::Item) -> CgnsResult<i32> {
+        parent.goto()?;
+
         let name = CString::new(data.name.clone())?;
         let value = CString::new(data.value.clone())?;
 
@@ -152,10 +156,6 @@ where
     }
 }
 
-// impl<'p, P> IterableNode<'p> for Descriptor<'p, P> where P: BaseRefNode + GotoTarget {}
-
-// TODO: why do we need this + Sized bound?
-// TODO: make this trait generic
 pub trait DescriptorParent<'p, M: OpenMode + 'p>:
     ParentNode<'p, M, Descriptor<'p, M, Self>> + 'p + Sized + GotoTarget<M> + BaseRefNode<M>
 {
@@ -170,10 +170,18 @@ pub trait DescriptorParent<'p, M: OpenMode + 'p>:
         M: OpenModeWrite,
     {
         Descriptor::write(self, descriptor_data)?;
-
         Ok(())
     }
-    fn n_descriptors(&self) -> CgnsResult<i32> {
+    fn iter_descriptors(&'p mut self) -> CgnsResult<NodeIter<'p, M, Descriptor<'p, M, Self>>>
+    where
+        M: OpenModeRead,
+    {
+        Descriptor::iter(self)
+    }
+    fn n_descriptors(&self) -> CgnsResult<i32>
+    where
+        M: OpenModeRead,
+    {
         self.n_children()
     }
 }

@@ -19,6 +19,7 @@ where
 {
     fn n_children(&self) -> CgnsResult<i32>
     where
+        M: OpenModeRead,
         C: SiblingNode<'p, M>;
 }
 
@@ -27,6 +28,7 @@ pub trait SiblingNode<'p, M: OpenMode + 'p>: ChildNode<'p, M> + IndexableNode {
     fn new(parent: &'p Self::Parent, index: i32) -> CgnsResult<Self>
     where
         Self: Sized,
+        M: OpenModeRead,
     {
         if index > 0 && index <= parent.n_children()? {
             Ok(Self::new_unchecked(parent, index))

@@ -10,17 +10,18 @@ pub enum CgnsNodeLabel {
     Custom(String),
 }
 
-impl CgnsNodeLabel {
-    pub fn as_str<'a>(&'a self) -> &'a str {
+impl std::fmt::Display for CgnsNodeLabel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use CgnsNodeLabel::*;
-        match self {
+        let res = match self {
             Ordinal => "Ordinal_t",
             Zone => "Zone_t",
             Base => "CGNSBase_t",
             SimulationType => "SimulationType_t",
             Descriptor => "Descriptor_t",
             Custom(inner) => &inner,
-        }
+        };
+        write!(f, "{}", res)
     }
 }
 
@@ -45,7 +46,22 @@ impl CgnsPath {
         }
     }
 }
-// TODO: impl Display
+
+impl std::fmt::Display for CgnsPath {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut node_path = String::new();
+
+        for (label, index) in &self.nodes {
+            node_path.push_str(&format!("{}/{}/", label, index));
+        }
+
+        write!(
+            f,
+            "File_t/{}/Base_t/{}/{}",
+            self.file_number, self.base_index, node_path
+        )
+    }
+}
 
 #[repr(u32)]
 pub enum CgnsOpenMode {

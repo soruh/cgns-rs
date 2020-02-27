@@ -19,6 +19,8 @@ pub trait IndexableNode: Node {
 pub trait RwNode<'n, M: OpenMode + 'n>: ChildNode<'n, M> {
     type Item;
 
+    // TODO: read/write in-place methods
+    // TODO: default impls for read/write that `goto` `Self::Parent` before calling the in-place method
     fn read(&self) -> CgnsResult<Self::Item>
     where
         M: OpenModeRead;
@@ -31,6 +33,7 @@ pub trait RwNode<'n, M: OpenMode + 'n>: ChildNode<'n, M> {
     // TODO: relax trait bounds?
     fn delete_by_name(self, parent: &mut Self::Parent, name: String) -> CgnsResult<()>
     where
+        M: OpenModeWrite + OpenModeRead,
         Self: Sized + GotoTarget<M>,
         Self::Parent: GotoTarget<M> + BaseRefNode<M>,
     {
@@ -41,6 +44,7 @@ pub trait RwNode<'n, M: OpenMode + 'n>: ChildNode<'n, M> {
 
     fn delete(self, parent: &mut Self::Parent) -> CgnsResult<()>
     where
+        M: OpenModeWrite + OpenModeRead,
         Self: Sized + GotoTarget<M> + NamedNode<M>,
         Self::Parent: GotoTarget<M> + BaseRefNode<M>,
     {

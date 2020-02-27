@@ -10,6 +10,16 @@ where
 }
 
 pub struct OrdinalData(pub i32);
+impl From<i32> for OrdinalData {
+    fn from(data: i32) -> Self {
+        OrdinalData(data)
+    }
+}
+impl From<OrdinalData> for i32 {
+    fn from(data: OrdinalData) -> Self {
+        data.0
+    }
+}
 
 impl<'p, M: OpenMode, P> Node for Ordinal<'p, M, P> where P: ParentNode<'p, M, Self> {}
 
@@ -53,6 +63,7 @@ where
 {
     type Item = OrdinalData;
     fn read(&self) -> CgnsResult<Self::Item> {
+        self.parent().goto()?;
         let mut ordinal = 0;
         to_cgns_result(unsafe { cgns_bindings::cg_ordinal_read(&mut ordinal) })?;
         Ok(OrdinalData(ordinal))
@@ -74,7 +85,7 @@ where
 {
     fn path(&self) -> CgnsPath {
         let mut path = self.parent.path();
-        path.nodes.push((CgnsNodeLabel::Descriptor, 0));
+        path.nodes.push((CgnsNodeLabel::Ordinal, 0));
         path
     }
 }
@@ -87,4 +98,27 @@ where
     fn base<'b>(&'b self) -> &'b Base<M> {
         self.parent().base()
     }
+}
+
+pub trait OrdinalParent<'p, M: OpenMode + 'p>:
+    ParentNode<'p, M, Ordinal<'p, M, Self>> + 'p + Sized + GotoTarget<M> + BaseRefNode<M>
+{
+    fn get_ordinal(&'p self) -> CgnsResult<OrdinalData>
+    where
+        M: OpenModeRead,
+    {
+        Ordinal::new(self).read()
+    }
+    fn set_ordinal(&mut self, ordinal_data: &OrdinalData) -> CgnsResult<()>
+    where
+        M: OpenModeWrite,
+    {
+        Ordinal::write(self, ordinal_data)?;
+        Ok(())
+    }
+}
+
+impl<'p, M: OpenMode + 'p, N> OrdinalParent<'p, M> for N where
+    N: ParentNode<'p, M, Ordinal<'p, M, N>> + 'p + GotoTarget<M> + BaseRefNode<M>
+{
 }

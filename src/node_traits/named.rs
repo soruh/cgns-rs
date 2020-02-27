@@ -6,7 +6,7 @@ pub trait LabeledNode {
 
 pub trait NamedNode<M: OpenMode>: LabeledNode {
     fn name(&self) -> CgnsResult<String> {
-        Ok(Self::NODE_LABEL.as_str().into())
+        Ok(Self::NODE_LABEL.to_string())
     }
 }
 

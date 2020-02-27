@@ -25,7 +25,10 @@ where
     }
 }
 
-pub trait IterableNode<'p, M: OpenMode + 'p>: SiblingNode<'p, M> {
+pub trait IterableNode<'p, M: OpenMode + 'p>: SiblingNode<'p, M>
+where
+    M: OpenModeRead,
+{
     fn iter(parent: &'p Self::Parent) -> CgnsResult<NodeIter<'p, M, Self>> {
         Ok(NodeIter {
             current: 0,
@@ -35,4 +38,9 @@ pub trait IterableNode<'p, M: OpenMode + 'p>: SiblingNode<'p, M> {
     }
 }
 
-impl<'p, M: OpenMode + 'p, N> IterableNode<'p, M> for N where N: SiblingNode<'p, M> {}
+impl<'p, M: OpenMode + 'p, N> IterableNode<'p, M> for N
+where
+    N: SiblingNode<'p, M>,
+    M: OpenModeRead,
+{
+}

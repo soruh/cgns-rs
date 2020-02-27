@@ -127,7 +127,10 @@ impl<'f, M: OpenMode> File<'f, M> {
     /// NOTE: the `base_index` is not checked for validity
     // TODO: replace in favour of a generic parent trait
     #[inline]
-    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>> {
+    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>>
+    where
+        M: OpenModeRead,
+    {
         Base::new(self, base_index)
     }
 }

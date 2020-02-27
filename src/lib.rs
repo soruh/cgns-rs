@@ -85,7 +85,7 @@ impl Library {
         let mut indicies = Vec::with_capacity(depth);
 
         for (label, index) in &path.nodes {
-            let label = CString::new(label.as_str())?;
+            let label = CString::new(label.to_string())?;
             // Safety: golist needs a *mut, but we can only get imutable pointers from a CString
             // since golist doesn't mutate the pointer we can safely transmute it.
             labels.push(unsafe { std::mem::transmute(label.as_ptr()) });

@@ -21,7 +21,11 @@ impl<'b, M: OpenMode> Base<'b, M> {
         Ok(cell_dim)
     }
 
-    pub fn n_zones(&self) -> CgnsResult<i32> {
+    #[inline]
+    pub fn n_zones(&self) -> CgnsResult<i32>
+    where
+        M: OpenModeRead,
+    {
         let mut nzones = 0;
 
         to_cgns_result(unsafe {
@@ -32,12 +36,19 @@ impl<'b, M: OpenMode> Base<'b, M> {
     }
 
     #[inline]
-    pub fn get_zone<'z>(&'z self, zone_index: i32) -> CgnsResult<Zone<'z, M>> {
+    pub fn get_zone<'z>(&'z self, zone_index: i32) -> CgnsResult<Zone<'z, M>>
+    where
+        M: OpenModeRead,
+    {
         Zone::new(self, zone_index)
     }
 
-    pub fn zones() {
-        todo!()
+    #[inline]
+    pub fn zones<'z>(&'z self) -> CgnsResult<NodeIter<'z, M, Zone<'z, M>>>
+    where
+        M: OpenModeRead,
+    {
+        Zone::iter(self)
     }
 }
 
@@ -126,18 +137,6 @@ impl<'b, M: OpenMode> RwNode<'b, M> for Base<'b, M> {
         })?;
 
         Ok(base_index)
-    }
-}
-
-impl<'b, M: OpenMode> ParentNode<'b, M, Zone<'b, M>> for Base<'b, M> {
-    fn n_children(&self) -> CgnsResult<i32> {
-        self.n_zones()
-    }
-}
-
-impl<'b, M: OpenMode> ParentNode<'b, M, SimulationType<'b, M>> for Base<'b, M> {
-    fn n_children(&self) -> CgnsResult<i32> {
-        Ok(1) // TODO
     }
 }
 
