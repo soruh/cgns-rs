@@ -131,6 +131,7 @@ impl Library {
                     .to_string();
                 let index = indecies[i].assume_init();
                 path.push((CgnsNodeLabel::Custom(label), index));
+                // TODO: find out the actual Label instead of always using `Custom`
             };
         }
 
