@@ -8,7 +8,6 @@ where
     current: i32,
     parent: &'p S::Parent,
 }
-
 impl<'p, M: OpenMode + 'p, S> Iterator for NodeIter<'p, M, S>
 where
     S: SiblingNode<'p, M>,
@@ -37,7 +36,6 @@ where
         })
     }
 }
-
 impl<'p, M: OpenMode + 'p, N> IterableNode<'p, M> for N
 where
     N: SiblingNode<'p, M>,

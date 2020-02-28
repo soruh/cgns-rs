@@ -37,7 +37,6 @@ pub static LIB_IN_USE: AtomicBool = AtomicBool::new(false);
 pub struct Library {
     _phantom: PhantomData<*const ()>,
 }
-
 impl Library {
     #[inline]
     pub fn new() -> Self {
@@ -155,7 +154,6 @@ impl Library {
         Ok(path)
     }
 }
-
 impl Drop for Library {
     fn drop(&mut self) {
         if !LIB_IN_USE.compare_and_swap(true, false, Ordering::Release) {
@@ -163,7 +161,6 @@ impl Drop for Library {
         }
     }
 }
-
 impl std::fmt::Debug for Library {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         write!(f, "Library")

@@ -20,9 +20,7 @@ impl From<OrdinalData> for i32 {
         data.0
     }
 }
-
 impl<'p, M: OpenMode, P> Node for Ordinal<'p, M, P> where P: ParentNode<'p, M, Self> {}
-
 impl<'p, M: OpenMode, P> ChildNode<'p, M> for Ordinal<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
@@ -32,7 +30,6 @@ where
         self.parent
     }
 }
-
 impl<'p, N, M: OpenMode> ParentNode<'p, M, Ordinal<'p, M, Self>> for N
 where
     N: Node + GotoTarget<M> + BaseRefNode<M>,
@@ -44,7 +41,6 @@ where
         unreachable!()
     }
 }
-
 impl<'p, M: OpenMode, P> OnlyChildNode<'p, M> for Ordinal<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
@@ -56,7 +52,6 @@ where
         }
     }
 }
-
 impl<'p, M: OpenMode, P> RwNode<'p, M> for Ordinal<'p, M, P>
 where
     P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
@@ -74,11 +69,9 @@ where
         Ok(0)
     }
 }
-
 impl<'p, P: BaseRefNode<M> + GotoTarget<M>, M: OpenMode> LabeledNode for Ordinal<'p, M, P> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Ordinal;
 }
-
 impl<'p, M: OpenMode, P> GotoTarget<M> for Ordinal<'p, M, P>
 where
     P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
@@ -89,7 +82,6 @@ where
         path
     }
 }
-
 impl<'p, M: OpenMode, P> BaseRefNode<M> for Ordinal<'p, M, P>
 where
     P: BaseRefNode<M> + GotoTarget<M>,
@@ -117,7 +109,6 @@ pub trait OrdinalParent<'p, M: OpenMode + 'p>:
         Ok(())
     }
 }
-
 impl<'p, M: OpenMode + 'p, N> OrdinalParent<'p, M> for N where
     N: ParentNode<'p, M, Ordinal<'p, M, N>> + 'p + GotoTarget<M> + BaseRefNode<M>
 {

@@ -10,7 +10,6 @@ pub struct Cgio<'g, M> {
     root_node: CgioNode,
     _phantom: PhantomData<&'g M>,
 }
-
 impl<'g, M: OpenMode> Cgio<'g, M> {
     pub(crate) fn from_file<'f>(file: &File<'f, M>) -> CgnsResult<Cgio<'f, M>> {
         let cgio_number = file.get_cgio_number()?;

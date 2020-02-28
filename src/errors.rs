@@ -14,7 +14,6 @@ impl std::fmt::Debug for LibraryError {
         write!(f, "CgnsError ({}): {}", self.ier, self.messsage)
     }
 }
-
 impl std::error::Error for LibraryError {}
 
 #[derive(Debug)]
@@ -27,7 +26,6 @@ pub enum CgnsErrorKind {
     NodeNotFound,
     Other,
 }
-
 impl std::fmt::Display for CgnsErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self)
@@ -38,7 +36,6 @@ pub struct CgnsError {
     cause: Option<Box<dyn std::error::Error>>,
     kind: CgnsErrorKind,
 }
-
 impl std::fmt::Display for CgnsError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.kind)
@@ -54,7 +51,6 @@ impl std::fmt::Debug for CgnsError {
     }
 }
 impl std::error::Error for CgnsError {}
-
 impl From<std::ffi::NulError> for CgnsError {
     fn from(err: std::ffi::NulError) -> Self {
         CgnsError {
@@ -63,7 +59,6 @@ impl From<std::ffi::NulError> for CgnsError {
         }
     }
 }
-
 impl From<std::str::Utf8Error> for CgnsError {
     fn from(err: std::str::Utf8Error) -> Self {
         CgnsError {
@@ -83,7 +78,6 @@ impl From<std::ffi::FromBytesWithNulError> for CgnsError {
     }
 }
 */
-
 impl CgnsError {
     pub fn cgns(ier: i32, messsage: String) -> Self {
         Self {

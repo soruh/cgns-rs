@@ -7,13 +7,11 @@ pub struct File<'f, M: OpenMode> {
     pub(crate) lib: &'f Library,
     _phantom: PhantomData<*const M>,
 }
-
 impl<'f, M: OpenMode> std::fmt::Debug for File<'f, M> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         write!(f, "File[{}]", self.file_number)
     }
 }
-
 impl<'f, M: OpenMode> File<'f, M> {
     fn close_by_ref(&mut self) -> CgnsResult<()> {
         to_cgns_result(unsafe { cgns_bindings::cg_close(self.file_number) })
@@ -136,23 +134,19 @@ impl<'f, M: OpenMode> File<'f, M> {
         Base::new(self, base_index)
     }
 }
-
 impl<'f, M: OpenMode> Drop for File<'f, M> {
     fn drop(&mut self) {
         self.close_by_ref()
             .expect(&format!("Failed to close {:?}", self))
     }
 }
-
 impl<'f, M: OpenMode> Node for File<'f, M> {}
-
 impl<'f, M: OpenMode> IndexableNode for File<'f, M> {
     #[inline]
     fn index(&self) -> i32 {
         self.file_number
     }
 }
-
 impl<'f, M: OpenMode> ParentNode<'f, M, Base<'f, M>> for File<'f, M> {
     fn n_children(&self) -> CgnsResult<i32> {
         let mut nbases = 0;

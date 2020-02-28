@@ -9,7 +9,6 @@ pub enum CgnsNodeLabel {
     Ordinal,
     Custom(String),
 }
-
 impl std::fmt::Display for CgnsNodeLabel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use CgnsNodeLabel::*;
@@ -33,7 +32,6 @@ pub struct CgnsPath {
     pub base_index: i32,
     pub nodes: CgnsPathNodes,
 }
-
 impl CgnsPath {
     pub fn parent(&self) -> Option<CgnsPath> {
         if self.nodes.is_empty() {
@@ -46,7 +44,6 @@ impl CgnsPath {
         }
     }
 }
-
 impl std::fmt::Display for CgnsPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut node_path = String::new();

@@ -35,7 +35,6 @@ pub struct ZoneData {
     pub name: String,
     pub size: ZoneSize,
 }
-
 impl<'z, M: OpenMode> Zone<'z, M> {
     pub fn index_dim(&self) -> CgnsResult<i32> {
         let mut index_dim = 0;
@@ -52,13 +51,10 @@ impl<'z, M: OpenMode> Zone<'z, M> {
         Ok(index_dim)
     }
 }
-
 impl<'z, M: OpenMode> Node for Zone<'z, M> {}
-
 impl<'z, M: OpenMode> LabeledNode for Zone<'z, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Zone;
 }
-
 impl<'z, M: OpenMode> NamedNode<M> for Zone<'z, M>
 where
     M: OpenModeRead,
@@ -67,7 +63,6 @@ where
         Ok(String::from(&self.read()?.name))
     }
 }
-
 impl<'z, M: OpenMode> GotoTarget<M> for Zone<'z, M> {
     fn path(&self) -> CgnsPath {
         let mut path = self.base.path();
@@ -75,7 +70,6 @@ impl<'z, M: OpenMode> GotoTarget<M> for Zone<'z, M> {
         path
     }
 }
-
 impl<'z, M: OpenMode> RwNode<'z, M> for Zone<'z, M> {
     type Item = ZoneData;
     fn read(&self) -> CgnsResult<Self::Item> {
@@ -196,7 +190,6 @@ impl<'z, M: OpenMode> RwNode<'z, M> for Zone<'z, M> {
         Ok(zone_index)
     }
 }
-
 impl<'z, M: OpenMode> ChildNode<'z, M> for Zone<'z, M> {
     type Parent = Base<'z, M>;
 
@@ -211,14 +204,12 @@ impl<'z, M: OpenMode> BaseRefNode<M> for Zone<'z, M> {
         self.base
     }
 }
-
 impl<'z, M: OpenMode> IndexableNode for Zone<'z, M> {
     #[inline]
     fn index(&self) -> i32 {
         self.zone_index
     }
 }
-
 impl<'z, M: OpenMode> SiblingNode<'z, M> for Zone<'z, M> {
     #[inline]
     fn new_unchecked(parent: &'z Self::Parent, zone_index: i32) -> Self {
@@ -228,7 +219,6 @@ impl<'z, M: OpenMode> SiblingNode<'z, M> for Zone<'z, M> {
         }
     }
 }
-
 impl<'b, M: OpenMode> ParentNode<'b, M, Zone<'b, M>> for Base<'b, M> {
     fn n_children(&self) -> CgnsResult<i32>
     where

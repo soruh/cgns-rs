@@ -10,13 +10,10 @@ pub enum SimulationTypeData {
 pub struct SimulationType<'s, M: OpenMode> {
     base: &'s Base<'s, M>,
 }
-
 impl<'s, M: OpenMode> Node for SimulationType<'s, M> {}
-
 impl<'s, M: OpenMode> LabeledNode for SimulationType<'s, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::SimulationType;
 }
-
 impl<'s, M: OpenMode> GotoTarget<M> for SimulationType<'s, M> {
     fn path(&self) -> CgnsPath {
         let mut path = self.parent().path();
@@ -24,14 +21,12 @@ impl<'s, M: OpenMode> GotoTarget<M> for SimulationType<'s, M> {
         path
     }
 }
-
 impl<'s, M: OpenMode> BaseRefNode<M> for SimulationType<'s, M> {
     #[inline]
     fn base<'b>(&'b self) -> &'b Base<M> {
         self.base
     }
 }
-
 impl<'s, M: OpenMode> RwNode<'s, M> for SimulationType<'s, M> {
     type Item = SimulationTypeData;
 
@@ -74,7 +69,6 @@ impl<'s, M: OpenMode> RwNode<'s, M> for SimulationType<'s, M> {
         Ok(0)
     }
 }
-
 impl<'s, M: OpenMode> ChildNode<'s, M> for SimulationType<'s, M> {
     type Parent = Base<'s, M>;
 
@@ -82,14 +76,12 @@ impl<'s, M: OpenMode> ChildNode<'s, M> for SimulationType<'s, M> {
         self.base
     }
 }
-
 impl<'s, M: OpenMode> OnlyChildNode<'s, M> for SimulationType<'s, M> {
     #[inline]
     fn new(parent: &'s Self::Parent) -> Self {
         SimulationType { base: parent }
     }
 }
-
 impl<'b, M: OpenMode> ParentNode<'b, M, SimulationType<'b, M>> for Base<'b, M> {
     fn n_children(&self) -> CgnsResult<i32> {
         unreachable!()

@@ -8,7 +8,6 @@ pub struct Base<'b, M: OpenMode> {
     base_index: i32,
     file: &'b File<'b, M>,
 }
-
 impl<'b, M: OpenMode> Base<'b, M> {
     /// Get the cell dimension for the CGNS base
     pub fn dim(&self) -> CgnsResult<i32> {
@@ -51,19 +50,15 @@ impl<'b, M: OpenMode> Base<'b, M> {
         Zone::iter(self)
     }
 }
-
 impl<'b, M: OpenMode> Node for Base<'b, M> {}
-
 impl<'b, M: OpenMode> LabeledNode for Base<'b, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Base;
 }
-
 impl<'b, M: OpenModeRead> NamedNode<M> for Base<'b, M> {
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
     }
 }
-
 impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
     fn path(&self) -> CgnsPath {
         CgnsPath {
@@ -73,7 +68,6 @@ impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
         }
     }
 }
-
 impl<'b, M: OpenMode> BaseRefNode<M> for Base<'b, M> {
     fn file<'f>(&'f self) -> &'f File<M> {
         self.file
@@ -89,7 +83,6 @@ impl<'b, M: OpenMode> BaseRefNode<M> for Base<'b, M> {
         self
     }
 }
-
 impl<'b, M: OpenMode> RwNode<'b, M> for Base<'b, M> {
     type Item = BaseData;
 
@@ -139,7 +132,6 @@ impl<'b, M: OpenMode> RwNode<'b, M> for Base<'b, M> {
         Ok(base_index)
     }
 }
-
 impl<'b, M: OpenMode> ChildNode<'b, M> for Base<'b, M> {
     type Parent = File<'b, M>;
 
@@ -148,14 +140,12 @@ impl<'b, M: OpenMode> ChildNode<'b, M> for Base<'b, M> {
         self.file
     }
 }
-
 impl<'b, M: OpenMode> IndexableNode for Base<'b, M> {
     #[inline]
     fn index(&self) -> i32 {
         self.base_index
     }
 }
-
 impl<'b, M: OpenMode> SiblingNode<'b, M> for Base<'b, M> {
     #[inline]
     fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b, M> {

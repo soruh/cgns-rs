@@ -18,9 +18,7 @@ pub struct DescriptorData {
     pub name: String,
     pub value: String,
 }
-
 impl<'p, P, M: OpenMode> Node for Descriptor<'p, M, P> where P: ParentNode<'p, M, Self> {}
-
 impl<'p, P, M: OpenMode> ChildNode<'p, M> for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
@@ -30,7 +28,6 @@ where
         self.parent
     }
 }
-
 impl<'p, N, M: OpenMode> ParentNode<'p, M, Descriptor<'p, M, Self>> for N
 where
     N: Node + GotoTarget<M> + BaseRefNode<M>,
@@ -45,14 +42,12 @@ where
         Ok(n_descriptors)
     }
 }
-
 impl<'p, M: OpenMode, P> LabeledNode for Descriptor<'p, M, P>
 where
     P: BaseRefNode<M> + GotoTarget<M>,
 {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Descriptor;
 }
-
 impl<'p, M: OpenMode, P> NamedNode<M> for Descriptor<'p, M, P>
 where
     P: BaseRefNode<M> + GotoTarget<M>,
@@ -62,7 +57,6 @@ where
         Ok(String::from(&self.read()?.name))
     }
 }
-
 impl<'p, P, M: OpenMode> GotoTarget<M> for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
@@ -73,7 +67,6 @@ where
         path
     }
 }
-
 impl<'p, P, M: OpenMode> IndexableNode for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
@@ -83,7 +76,6 @@ where
         self.descriptor_index
     }
 }
-
 impl<'p, P, M: OpenMode> SiblingNode<'p, M> for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
@@ -97,7 +89,6 @@ where
         }
     }
 }
-
 impl<'p, P, M: OpenMode> RwNode<'p, M> for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self> + GotoTarget<M> + BaseRefNode<M>,
@@ -145,7 +136,6 @@ where
         Ok(-1)
     }
 }
-
 impl<'p, P, M: OpenMode> BaseRefNode<M> for Descriptor<'p, M, P>
 where
     P: BaseRefNode<M> + GotoTarget<M>,
@@ -185,7 +175,6 @@ pub trait DescriptorParent<'p, M: OpenMode + 'p>:
         self.n_children()
     }
 }
-
 impl<'p, M: OpenMode + 'p, N> DescriptorParent<'p, M> for N where
     N: ParentNode<'p, M, Descriptor<'p, M, N>> + 'p + GotoTarget<M> + BaseRefNode<M>
 {
