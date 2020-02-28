@@ -86,7 +86,6 @@ impl<'p, M: OpenMode, P> BaseRefNode<M> for Ordinal<'p, M, P>
 where
     P: BaseRefNode<M> + GotoTarget<M>,
 {
-    #[inline]
     fn base<'b>(&'b self) -> &'b Base<M> {
         self.parent().base()
     }

@@ -1,16 +1,8 @@
-// TODO: traits for Read and Write access?
-// pro: compile time security that no wrong methods are called
-// con: impossible to chose open mode at run time
-//
-// possible solution: allow runtime creatation in any open mode,
-// make the compiler think the user has `Modify` access.
-
 pub use libcgns_sys::{cgio as cgio_bindings, cgns as cgns_bindings};
 
 #[macro_use]
 pub mod errors;
 pub mod cgio;
-pub mod file;
 pub mod node_traits;
 pub mod nodes;
 pub mod open_modes;
@@ -18,7 +10,6 @@ pub mod types;
 
 pub use cgio::*;
 pub use errors::*;
-pub use file::*;
 pub use node_traits::*;
 pub use nodes::*;
 pub use open_modes::*;

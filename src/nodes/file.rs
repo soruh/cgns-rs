@@ -13,6 +13,31 @@ impl<'f, M: OpenMode> std::fmt::Debug for File<'f, M> {
     }
 }
 impl<'f, M: OpenMode> File<'f, M> {
+    #[inline]
+    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>>
+    where
+        M: OpenModeRead,
+    {
+        Base::new(self, base_index)
+    }
+
+    #[inline]
+    pub fn bases<'b>(&'b self) -> CgnsResult<NodeIter<M, Base<'b, M>>>
+    where
+        M: OpenModeRead,
+    {
+        Base::iter(self)
+    }
+
+    #[inline]
+    pub fn n_bases<'b>(&'b self) -> CgnsResult<i32>
+    where
+        M: OpenModeRead,
+        Self: ParentNode<'b, M, Base<'b, M>>,
+    {
+        self.n_children()
+    }
+
     fn close_by_ref(&mut self) -> CgnsResult<()> {
         to_cgns_result(unsafe { cgns_bindings::cg_close(self.file_number) })
     }
@@ -22,6 +47,11 @@ impl<'f, M: OpenMode> File<'f, M> {
         self.close_by_ref()?;
         std::mem::forget(self); // we don't want to call `close` twice...
         Ok(())
+    }
+
+    /// exposes the cgns_bindings internal file_number (`fn`) of this file
+    pub fn file_number(&self) -> i32 {
+        self.file_number
     }
 
     pub(crate) fn open_raw(filename: &str, mode: CgnsOpenMode) -> CgnsResult<i32> {
@@ -80,11 +110,6 @@ impl<'f, M: OpenMode> File<'f, M> {
         })
     }
 
-    /// exposes the cgns_bindings internal file_number (`fn`) of this file
-    pub fn file_number(&self) -> i32 {
-        self.file_number
-    }
-
     /// exposes the cgns_bindings internal cgio_number (`cgio_num`) of this file
     pub fn get_cgio_number(&self) -> CgnsResult<i32> {
         let mut cgio_number = 0;
@@ -124,14 +149,6 @@ impl<'f, M: OpenMode> File<'f, M> {
                 follow_links as i32,
             )
         })
-    }
-
-    #[inline]
-    pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>>
-    where
-        M: OpenModeRead,
-    {
-        Base::new(self, base_index)
     }
 }
 impl<'f, M: OpenMode> Drop for File<'f, M> {

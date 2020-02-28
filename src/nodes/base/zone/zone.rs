@@ -219,14 +219,6 @@ impl<'z, M: OpenMode> SiblingNode<'z, M> for Zone<'z, M> {
         }
     }
 }
-impl<'b, M: OpenMode> ParentNode<'b, M, Zone<'b, M>> for Base<'b, M> {
-    fn n_children(&self) -> CgnsResult<i32>
-    where
-        M: OpenModeRead,
-    {
-        self.n_zones()
-    }
-}
 
 // TODO
 // impl<'z, M: OpenMode> ParentNode<'z> for Zone<'z, M> {

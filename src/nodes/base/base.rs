@@ -9,29 +9,13 @@ pub struct Base<'b, M: OpenMode> {
     file: &'b File<'b, M>,
 }
 impl<'b, M: OpenMode> Base<'b, M> {
-    /// Get the cell dimension for the CGNS base
-    pub fn dim(&self) -> CgnsResult<i32> {
-        let mut cell_dim = 0;
-
-        to_cgns_result(unsafe {
-            cgns_bindings::cg_cell_dim(self.file().file_number(), self.index(), &mut cell_dim)
-        })?;
-
-        Ok(cell_dim)
-    }
-
     #[inline]
     pub fn n_zones(&self) -> CgnsResult<i32>
     where
         M: OpenModeRead,
+        Self: ParentNode<'b, M, Zone<'b, M>>,
     {
-        let mut nzones = 0;
-
-        to_cgns_result(unsafe {
-            cgns_bindings::cg_nzones(self.file().file_number(), self.index(), &mut nzones)
-        })?;
-
-        Ok(nzones)
+        self.n_children()
     }
 
     #[inline]
@@ -49,17 +33,36 @@ impl<'b, M: OpenMode> Base<'b, M> {
     {
         Zone::iter(self)
     }
+
+    /// exposes the cgns_bindings internal base_index (`B`) of this base
+    #[inline]
+    pub fn base_index(&self) -> i32 {
+        self.base_index
+    }
+
+    /// Get the cell dimension for the CGNS base
+    pub fn dim(&self) -> CgnsResult<i32> {
+        let mut cell_dim = 0;
+
+        to_cgns_result(unsafe {
+            cgns_bindings::cg_cell_dim(self.file().file_number(), self.index(), &mut cell_dim)
+        })?;
+
+        Ok(cell_dim)
+    }
 }
 impl<'b, M: OpenMode> Node for Base<'b, M> {}
 impl<'b, M: OpenMode> LabeledNode for Base<'b, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Base;
 }
 impl<'b, M: OpenModeRead> NamedNode<M> for Base<'b, M> {
+    #[inline]
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
     }
 }
 impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
+    #[inline]
     fn path(&self) -> CgnsPath {
         CgnsPath {
             file_number: self.file().file_number(),
@@ -161,4 +164,25 @@ pub struct BaseData {
     pub name: String,
     pub cell_dim: i32,
     pub phys_dim: i32,
+}
+
+impl<'b, M: OpenMode> ParentNode<'b, M, SimulationType<'b, M>> for Base<'b, M> {
+    fn n_children(&self) -> CgnsResult<i32> {
+        unreachable!()
+    }
+}
+
+impl<'b, M: OpenMode> ParentNode<'b, M, Zone<'b, M>> for Base<'b, M> {
+    fn n_children(&self) -> CgnsResult<i32>
+    where
+        M: OpenModeRead,
+    {
+        let mut nzones = 0;
+
+        to_cgns_result(unsafe {
+            cgns_bindings::cg_nzones(self.file().file_number(), self.index(), &mut nzones)
+        })?;
+
+        Ok(nzones)
+    }
 }
