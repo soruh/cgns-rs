@@ -193,25 +193,21 @@ impl<'z, M: OpenMode> RwNode<'z, M> for Zone<'z, M> {
 impl<'z, M: OpenMode> ChildNode<'z, M> for Zone<'z, M> {
     type Parent = Base<'z, M>;
 
-    #[inline]
     fn parent(&self) -> &Self::Parent {
         self.base
     }
 }
 impl<'z, M: OpenMode> BaseRefNode<M> for Zone<'z, M> {
-    #[inline]
     fn base<'b>(&'b self) -> &'b Base<M> {
         self.base
     }
 }
 impl<'z, M: OpenMode> IndexableNode for Zone<'z, M> {
-    #[inline]
     fn index(&self) -> i32 {
         self.zone_index
     }
 }
 impl<'z, M: OpenMode> SiblingNode<'z, M> for Zone<'z, M> {
-    #[inline]
     fn new_unchecked(parent: &'z Self::Parent, zone_index: i32) -> Self {
         Zone {
             base: parent,

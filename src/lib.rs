@@ -29,7 +29,6 @@ pub struct Library {
     _phantom: PhantomData<*const ()>,
 }
 impl Library {
-    #[inline]
     pub fn new() -> Self {
         Self::take()
     }
@@ -43,7 +42,6 @@ impl Library {
         }
     }
 
-    #[inline]
     pub fn open_dynamic<'l>(
         &'l self,
         filename: &str,

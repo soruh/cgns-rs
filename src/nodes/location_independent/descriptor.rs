@@ -71,7 +71,6 @@ impl<'p, P, M: OpenMode> IndexableNode for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
 {
-    #[inline]
     fn index(&self) -> i32 {
         self.descriptor_index
     }
@@ -80,7 +79,6 @@ impl<'p, P, M: OpenMode> SiblingNode<'p, M> for Descriptor<'p, M, P>
 where
     P: ParentNode<'p, M, Self>,
 {
-    #[inline]
     fn new_unchecked(parent: &'p Self::Parent, descriptor_index: i32) -> Self {
         Descriptor {
             parent,
@@ -140,7 +138,6 @@ impl<'p, P, M: OpenMode> BaseRefNode<M> for Descriptor<'p, M, P>
 where
     P: BaseRefNode<M> + GotoTarget<M>,
 {
-    #[inline]
     fn base<'b>(&'b self) -> &'b Base<M> {
         self.parent().base()
     }

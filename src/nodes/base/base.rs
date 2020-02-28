@@ -9,7 +9,6 @@ pub struct Base<'b, M: OpenMode> {
     file: &'b File<'b, M>,
 }
 impl<'b, M: OpenMode> Base<'b, M> {
-    #[inline]
     pub fn n_zones(&self) -> CgnsResult<i32>
     where
         M: OpenModeRead,
@@ -18,7 +17,6 @@ impl<'b, M: OpenMode> Base<'b, M> {
         self.n_children()
     }
 
-    #[inline]
     pub fn get_zone<'z>(&'z self, zone_index: i32) -> CgnsResult<Zone<'z, M>>
     where
         M: OpenModeRead,
@@ -26,7 +24,6 @@ impl<'b, M: OpenMode> Base<'b, M> {
         Zone::new(self, zone_index)
     }
 
-    #[inline]
     pub fn zones<'z>(&'z self) -> CgnsResult<NodeIter<'z, M, Zone<'z, M>>>
     where
         M: OpenModeRead,
@@ -35,7 +32,6 @@ impl<'b, M: OpenMode> Base<'b, M> {
     }
 
     /// exposes the cgns_bindings internal base_index (`B`) of this base
-    #[inline]
     pub fn base_index(&self) -> i32 {
         self.base_index
     }
@@ -56,13 +52,11 @@ impl<'b, M: OpenMode> LabeledNode for Base<'b, M> {
     const NODE_LABEL: CgnsNodeLabel = CgnsNodeLabel::Base;
 }
 impl<'b, M: OpenModeRead> NamedNode<M> for Base<'b, M> {
-    #[inline]
     fn name(&self) -> CgnsResult<String> {
         Ok(String::from(&self.read()?.name))
     }
 }
 impl<'b, M: OpenMode> GotoTarget<M> for Base<'b, M> {
-    #[inline]
     fn path(&self) -> CgnsPath {
         CgnsPath {
             file_number: self.file().file_number(),
@@ -81,7 +75,6 @@ impl<'b, M: OpenMode> BaseRefNode<M> for Base<'b, M> {
     {
         self.file().lib
     }
-    #[inline]
     fn base<'b_>(&'b_ self) -> &'b_ Base<M> {
         self
     }
@@ -138,19 +131,16 @@ impl<'b, M: OpenMode> RwNode<'b, M> for Base<'b, M> {
 impl<'b, M: OpenMode> ChildNode<'b, M> for Base<'b, M> {
     type Parent = File<'b, M>;
 
-    #[inline]
     fn parent(&self) -> &Self::Parent {
         self.file
     }
 }
 impl<'b, M: OpenMode> IndexableNode for Base<'b, M> {
-    #[inline]
     fn index(&self) -> i32 {
         self.base_index
     }
 }
 impl<'b, M: OpenMode> SiblingNode<'b, M> for Base<'b, M> {
-    #[inline]
     fn new_unchecked(parent: &'b Self::Parent, base_index: i32) -> Base<'b, M> {
         Base {
             file: parent,

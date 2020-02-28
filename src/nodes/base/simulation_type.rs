@@ -22,7 +22,6 @@ impl<'s, M: OpenMode> GotoTarget<M> for SimulationType<'s, M> {
     }
 }
 impl<'s, M: OpenMode> BaseRefNode<M> for SimulationType<'s, M> {
-    #[inline]
     fn base<'b>(&'b self) -> &'b Base<M> {
         self.base
     }
@@ -77,7 +76,6 @@ impl<'s, M: OpenMode> ChildNode<'s, M> for SimulationType<'s, M> {
     }
 }
 impl<'s, M: OpenMode> OnlyChildNode<'s, M> for SimulationType<'s, M> {
-    #[inline]
     fn new(parent: &'s Self::Parent) -> Self {
         SimulationType { base: parent }
     }

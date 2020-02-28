@@ -13,7 +13,6 @@ impl<'f, M: OpenMode> std::fmt::Debug for File<'f, M> {
     }
 }
 impl<'f, M: OpenMode> File<'f, M> {
-    #[inline]
     pub fn get_base<'b>(&'b self, base_index: i32) -> CgnsResult<Base<'b, M>>
     where
         M: OpenModeRead,
@@ -21,7 +20,6 @@ impl<'f, M: OpenMode> File<'f, M> {
         Base::new(self, base_index)
     }
 
-    #[inline]
     pub fn bases<'b>(&'b self) -> CgnsResult<NodeIter<M, Base<'b, M>>>
     where
         M: OpenModeRead,
@@ -29,7 +27,6 @@ impl<'f, M: OpenMode> File<'f, M> {
         Base::iter(self)
     }
 
-    #[inline]
     pub fn n_bases<'b>(&'b self) -> CgnsResult<i32>
     where
         M: OpenModeRead,
@@ -128,7 +125,6 @@ impl<'f, M: OpenMode> File<'f, M> {
         Ok(root_id)
     }
 
-    #[inline]
     pub fn cgio<'s>(&'s self) -> CgnsResult<Cgio<'s, M>> {
         Cgio::from_file(self)
     }
@@ -159,7 +155,6 @@ impl<'f, M: OpenMode> Drop for File<'f, M> {
 }
 impl<'f, M: OpenMode> Node for File<'f, M> {}
 impl<'f, M: OpenMode> IndexableNode for File<'f, M> {
-    #[inline]
     fn index(&self) -> i32 {
         self.file_number
     }
